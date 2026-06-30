@@ -12,6 +12,13 @@ import sys
 
 import typer
 
+try:  # Load .env so PROVIDER / API keys work as documented (optional dep).
+    from dotenv import load_dotenv
+
+    load_dotenv()
+except ImportError:  # pragma: no cover - dotenv is a listed dependency
+    pass
+
 import agent
 import llm_client
 import report

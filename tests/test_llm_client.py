@@ -84,6 +84,62 @@ def test_complete_http_error(monkeypatch):
         llm_client.complete([{"role": "user", "content": "x"}])
 
 
+@respx.mock
+def test_openrouter_sends_fallback_models(monkeypatch):
+    monkeypatch.setenv("PROVIDER", "openrouter")
+    monkeypatch.setenv("OPENROUTER_API_KEY", "k")
+    route = respx.post("https://openrouter.ai/api/v1/chat/completions").mock(
+        return_value=httpx.Response(
+            200, json={"choices": [{"message": {"content": "ok"}}]}
+        )
+    )
+    llm_client.complete([{"role": "user", "content": "hi"}])
+    import json as _json
+
+    body = _json.loads(route.calls[0].request.content)
+    assert body["model"] == "google/gemma-4-31b-it:free"
+    assert len(body["models"]) >= 2  # primary + fallbacks
+    assert body["model"] == body["models"][0]
+
+
+@respx.mock
+def test_retry_on_429_then_success(monkeypatch):
+    monkeypatch.setenv("PROVIDER", "openrouter")
+    monkeypatch.setenv("OPENROUTER_API_KEY", "k")
+    monkeypatch.setattr("time.sleep", lambda *_: None)  # no real backoff
+    respx.post("https://openrouter.ai/api/v1/chat/completions").mock(
+        side_effect=[
+            httpx.Response(429, json={"error": "rate-limited"}),
+            httpx.Response(429, json={"error": "rate-limited"}),
+            httpx.Response(200, json={"choices": [{"message": {"content": "ok"}}]}),
+        ]
+    )
+    assert llm_client.complete([{"role": "user", "content": "hi"}]) == "ok"
+
+
+@respx.mock
+def test_retry_exhausts_then_raises(monkeypatch):
+    monkeypatch.setenv("PROVIDER", "openrouter")
+    monkeypatch.setenv("OPENROUTER_API_KEY", "k")
+    monkeypatch.setattr("time.sleep", lambda *_: None)
+    respx.post("https://openrouter.ai/api/v1/chat/completions").mock(
+        return_value=httpx.Response(429, json={"error": "rate-limited"})
+    )
+    with pytest.raises(llm_client.LLMError):
+        llm_client.complete([{"role": "user", "content": "hi"}])
+
+
+def test_retry_delay_honors_retry_after():
+    resp = httpx.Response(429, headers={"retry-after": "7"})
+    assert llm_client._retry_delay(resp, 0) == 7.0
+
+
+def test_retry_delay_exponential_default():
+    resp = httpx.Response(429)
+    assert llm_client._retry_delay(resp, 0) == llm_client._RETRY_BASE_SECONDS
+    assert llm_client._retry_delay(resp, 1) == llm_client._RETRY_BASE_SECONDS * 2
+
+
 def test_parse_json_with_fences():
     assert llm_client._parse_json('```json\n{"a": 1}\n```') == {"a": 1}
 
