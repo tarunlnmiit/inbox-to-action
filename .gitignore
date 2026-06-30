@@ -16,6 +16,9 @@ venv/
 *.egg-info/
 build/
 dist/
+
+# Personal triage config (ship config.example.json instead)
+config.json
 .pytest_cache/
 .coverage
 htmlcov/

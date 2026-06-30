@@ -151,7 +151,35 @@ PROVIDER=anthropic inbox-to-action run --mock   # default model: claude-opus-4-8
 ## Configuration
 
 All keys live in `.env` (`.env.example` is committed). Switch providers with `PROVIDER`:
-`openrouter` (default) · `ollama` · `nim` · `openai` · `anthropic` · `host`.
+`openrouter` (default) · `ollama` · `nim` · `openai` · `anthropic` · `claude` · `host`.
+
+### Configure triage (make it *yours*)
+
+The default buckets are generic — newsletters and job alerts are treated as no-action.
+Override that with `config.json` (copy `config.example.json`). Two layers:
+
+- **`rules`** — deterministic `field → category` overrides applied **before** the LLM
+  (fast, free, exact). First match wins. `field` ∈ `sender | subject | body | any`.
+- **`triage_instructions`** — freeform guidance injected into the classifier prompt for
+  nuance the model interprets.
+
+```json
+{
+  "triage_instructions": "I'm job hunting in ML/AI — treat relevant job alerts as action_needed.",
+  "rules": [
+    { "field": "sender",  "contains": "hirist.tech", "category": "action_needed" },
+    { "field": "subject", "contains": "invoice",     "category": "noise" }
+  ]
+}
+```
+
+```bash
+cp config.example.json config.json   # edit to taste (config.json is gitignored)
+inbox-to-action run --since 24h                 # auto-loads ./config.json
+inbox-to-action run --config /path/to/other.json
+```
+
+Quick override without a file: `TRIAGE_INSTRUCTIONS="treat job alerts as action_needed"`.
 
 ## Tests
 

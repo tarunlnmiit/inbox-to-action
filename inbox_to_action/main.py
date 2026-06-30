@@ -22,6 +22,7 @@ except ImportError:  # pragma: no cover - dotenv is a listed dependency
 from inbox_to_action import agent
 from inbox_to_action import llm_client
 from inbox_to_action import report
+from inbox_to_action.config import load_settings
 from inbox_to_action.reasoner import get_reasoner
 from inbox_to_action.tools import gmail
 
@@ -43,6 +44,10 @@ def run(
     ),
     report_path: str = typer.Option("triage-report.md", help="Report output path."),
     tasks_path: str = typer.Option("tasks.md", help="Tasks output path."),
+    config: str = typer.Option(
+        None, "--config", help="Triage config JSON (rules + instructions). "
+        "Defaults to INBOX_TO_ACTION_CONFIG or ./config.json."
+    ),
 ):
     """Fetch, triage, and write the report."""
     provider = llm_client.active_provider()
@@ -71,6 +76,14 @@ def run(
         raise typer.Exit(0)
 
     reasoner = get_reasoner(provider)
+    settings = load_settings(config)
+    if settings.rules or settings.triage_instructions:
+        bits = []
+        if settings.rules:
+            bits.append(f"{len(settings.rules)} rule(s)")
+        if settings.triage_instructions:
+            bits.append("custom instructions")
+        typer.secho(f"Triage config: {', '.join(bits)}.", fg=typer.colors.BLUE)
 
     def progress(i: int, total: int, email):
         typer.echo(f"  [{i}/{total}] {email.subject[:60]}")
@@ -84,6 +97,7 @@ def run(
             tasks_path=tasks_path,
             on_progress=progress,
             mock=mock,
+            settings=settings,
         )
     except llm_client.LLMError as e:
         typer.secho(str(e), fg=typer.colors.RED)
