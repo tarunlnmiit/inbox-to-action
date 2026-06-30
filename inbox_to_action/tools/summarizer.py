@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Optional
 
-from models import SUMMARY_WORD_THRESHOLD, Email
-from reasoner import Reasoner
+from inbox_to_action.models import SUMMARY_WORD_THRESHOLD, Email
+from inbox_to_action.reasoner import Reasoner
 
 _SYSTEM = (
     "Summarize the email below in at most two short lines. "

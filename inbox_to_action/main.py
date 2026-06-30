@@ -19,11 +19,11 @@ try:  # Load .env so PROVIDER / API keys work as documented (optional dep).
 except ImportError:  # pragma: no cover - dotenv is a listed dependency
     pass
 
-import agent
-import llm_client
-import report
-from reasoner import get_reasoner
-from tools import gmail
+from inbox_to_action import agent
+from inbox_to_action import llm_client
+from inbox_to_action import report
+from inbox_to_action.reasoner import get_reasoner
+from inbox_to_action.tools import gmail
 
 app = typer.Typer(
     add_completion=False,
@@ -117,7 +117,7 @@ def auth(
 def mcp():
     """Launch the MCP server (stdio) for Claude Code integration."""
     try:
-        import mcp_server
+        from inbox_to_action import mcp_server
     except ImportError as e:
         typer.secho(
             f"MCP support needs the `mcp` package (pip install mcp): {e}",

@@ -1,6 +1,6 @@
 from typer.testing import CliRunner
 
-import main
+from inbox_to_action import main
 
 runner = CliRunner()
 

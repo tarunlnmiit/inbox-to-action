@@ -5,7 +5,7 @@ import httpx
 import pytest
 import respx
 
-import llm_client
+from inbox_to_action import llm_client
 
 
 def test_active_provider_default(monkeypatch):

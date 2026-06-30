@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from models import CATEGORIES, TriageResult
+from inbox_to_action.models import CATEGORIES, TriageResult
 
 _TITLES = {
     "action_needed": "🔴 Action needed",

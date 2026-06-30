@@ -11,9 +11,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from models import CATEGORIES, Email, TriageResult
-from reasoner import Reasoner
-from tools import calendar_flag, classifier, gmail, summarizer, tasks
+from inbox_to_action.models import CATEGORIES, Email, TriageResult
+from inbox_to_action.reasoner import Reasoner
+from inbox_to_action.tools import calendar_flag, classifier, gmail, summarizer, tasks
 
 # Function-calling schemas for the agent's tool surface (also used by MCP).
 TOOL_SCHEMAS = [

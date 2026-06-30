@@ -12,8 +12,8 @@ import os
 from email.message import EmailMessage
 from pathlib import Path
 
-from models import Email
-from reasoner import Reasoner
+from inbox_to_action.models import Email
+from inbox_to_action.reasoner import Reasoner
 
 # READ + COMPOSE only. `gmail.compose` can create drafts but CANNOT send.
 # Do not add gmail.send or the broad mail.google.com scope.

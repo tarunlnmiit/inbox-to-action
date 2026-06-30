@@ -1,6 +1,6 @@
 import json
 
-import mcp_server
+from inbox_to_action import mcp_server
 
 
 def test_fetch_emails_tool_returns_json():

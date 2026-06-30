@@ -5,8 +5,10 @@ fetches emails, reasons over them (classify / summarize / extract / draft) on
 its own, then calls these tools to persist drafts, tasks, and the report. No
 provider key is needed.
 
-Run: `inbox-to-action mcp`  (or `python mcp_server.py`).
-Register in Claude Code: `claude mcp add inbox-to-action -- inbox-to-action mcp`.
+Run: `python -m inbox_to_action.mcp_server`  (or `inbox-to-action mcp`).
+Register in Claude Code:
+  `claude mcp add inbox-to-action -- python -m inbox_to_action.mcp_server`
+This is also the Docker CMD that the Glama listing builds.
 """
 
 from __future__ import annotations
@@ -17,8 +19,8 @@ from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
 
-from tools import gmail, tasks as tasks_tool
-from models import Task
+from inbox_to_action.tools import gmail, tasks as tasks_tool
+from inbox_to_action.models import Task
 
 mcp = FastMCP("inbox-to-action")
 

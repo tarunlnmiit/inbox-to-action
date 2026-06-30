@@ -39,7 +39,7 @@ class ProviderReasoner:
         json_schema: Optional[dict[str, Any]] = None,
         max_tokens: int = 1024,
     ) -> Any:
-        import llm_client
+        from inbox_to_action import llm_client
 
         return llm_client.complete(
             messages, json_schema=json_schema, max_tokens=max_tokens
