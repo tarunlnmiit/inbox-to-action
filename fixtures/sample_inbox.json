@@ -1,0 +1,42 @@
+[
+  {
+    "id": "msg-001",
+    "thread_id": "thr-001",
+    "sender": "Priya Raman <priya@acmecorp.com>",
+    "subject": "Need the Q3 deck by Thursday",
+    "received": "2026-06-29T09:12:00Z",
+    "body": "Hi,\n\nCan you send me the Q3 board deck by end of day Thursday? Finance needs the revenue slide updated with the new ARR numbers before the review. Let me know if you're blocked on anything.\n\nThanks,\nPriya"
+  },
+  {
+    "id": "msg-002",
+    "thread_id": "thr-002",
+    "sender": "Daniel Kim <dkim@partnerco.io>",
+    "subject": "Re: Kickoff call — pick a time?",
+    "received": "2026-06-29T11:40:00Z",
+    "body": "Hey, following up on the integration kickoff. Are you free for a 30-minute call Tuesday or Wednesday afternoon? I'd like to walk through the API scopes and get aligned on the timeline before we start building. Send me a slot that works and I'll drop a calendar invite.\n\nDaniel"
+  },
+  {
+    "id": "msg-003",
+    "thread_id": "thr-003",
+    "sender": "Engineering Digest <noreply@devweekly.com>",
+    "subject": "This week in Python: 3.14, free-threading, and more",
+    "received": "2026-06-29T06:00:00Z",
+    "body": "The latest from the Python world: the 3.14 release candidate is out, free-threaded builds are stabilizing, and uv keeps eating the packaging world. Read the full digest on the web. Unsubscribe at any time."
+  },
+  {
+    "id": "msg-004",
+    "thread_id": "thr-004",
+    "sender": "AWS Billing <no-reply@aws.amazon.com>",
+    "subject": "Your AWS invoice is available",
+    "received": "2026-06-28T23:55:00Z",
+    "body": "Your invoice for the billing period ending June 30 is now available in the Billing console. This is an automated notification; do not reply."
+  },
+  {
+    "id": "msg-005",
+    "thread_id": "thr-005",
+    "sender": "Maria Lopez <maria@acmecorp.com>",
+    "subject": "Long thread: migration plan + open questions",
+    "received": "2026-06-29T14:20:00Z",
+    "body": "Hi team, consolidating the migration discussion into one place because the side threads are getting hard to follow. Here is where we stand and what I still need decisions on. First, the database. We agreed to move from the single Postgres instance to a managed cluster, but we have not decided whether to do a blue-green cutover or a rolling migration. Blue-green is safer but doubles our infra cost for the overlap window, which could be two weeks given how long the backfill takes. Rolling is cheaper but riskier because the schema changes are not fully backward compatible, so we would need to ship the compatibility shims first and that pushes the timeline out by about ten days. I lean blue-green but I want Raj to confirm the budget can absorb it. Second, the API gateway. We are currently terminating TLS at the load balancer and doing auth in a sidecar, which works but adds a hop. Moving auth into the gateway itself would cut latency by roughly fifteen milliseconds at p99, but it couples us to the gateway vendor and makes local development harder because everyone would need the gateway running. I do not have a strong opinion here and would defer to whoever owns the latency budget. Third, observability. Right now traces stop at the service boundary because the downstream workers do not propagate the trace context. This has bitten us twice in the last month when debugging the payment retries, so I want to make context propagation a blocker for the cutover, not a follow-up. That is maybe three days of work. Fourth, the rollback plan. We do not have one written down, which is the part that worries me most. If the cutover goes wrong at 2am, the on-call engineer needs a runbook, not a Slack thread. I will draft it this week but I need someone who actually ran the last migration to review it. Open questions I need answered before Friday: can the budget absorb blue-green for a two-week overlap; who owns the latency budget and do they want auth moved into the gateway; and can someone from the original migration review my rollback runbook. If I do not hear back by Friday I am going to default to blue-green, leave auth where it is, and block the cutover on trace propagation plus a reviewed runbook. Shout if you disagree with any of that. Thanks, Maria"
+  }
+]
