@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from typing import Optional
+
+from inbox_to_action.config import Settings, match_rule
 from inbox_to_action.models import CATEGORIES, Email
 from inbox_to_action.reasoner import Reasoner
 
@@ -22,12 +25,30 @@ _SYSTEM = (
 )
 
 
-def classify_email(email: Email, reasoner: Reasoner) -> str:
-    """Return one of CATEGORIES. Falls back to 'fyi' on an unexpected value."""
+def classify_email(
+    email: Email, reasoner: Reasoner, settings: Optional[Settings] = None
+) -> str:
+    """Return one of CATEGORIES. Falls back to 'fyi' on an unexpected value.
+
+    Deterministic user rules (settings.rules) are applied first and short-circuit
+    the LLM; otherwise the model classifies, guided by settings.triage_instructions.
+    """
+    if settings and settings.rules:
+        forced = match_rule(email.sender, email.subject, email.body, settings.rules)
+        if forced is not None:
+            return forced
+
+    system = _SYSTEM
+    if settings and settings.triage_instructions:
+        system = (
+            f"{_SYSTEM}\n\nUser triage preferences (follow these closely):\n"
+            f"{settings.triage_instructions}"
+        )
+
     user = f"From: {email.sender}\nSubject: {email.subject}\n\n{email.body[:4000]}"
     result = reasoner.complete(
         [
-            {"role": "system", "content": _SYSTEM},
+            {"role": "system", "content": system},
             {"role": "user", "content": user},
         ],
         json_schema=_SCHEMA,

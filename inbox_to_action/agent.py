@@ -11,6 +11,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from typing import Optional
+
+from inbox_to_action.config import Settings
 from inbox_to_action.models import CATEGORIES, Email, TriageResult
 from inbox_to_action.reasoner import Reasoner
 from inbox_to_action.tools import calendar_flag, classifier, gmail, summarizer, tasks
@@ -72,9 +75,10 @@ def triage_email(
     gmail_service=None,
     save_drafts: bool = True,
     mock: bool = False,
+    settings: Optional[Settings] = None,
 ) -> TriageResult:
     """Run the per-email agentic trajectory. Model decides the path."""
-    category = classifier.classify_email(email, reasoner)
+    category = classifier.classify_email(email, reasoner, settings)
     result = TriageResult(email=email, category=category)
 
     # Summarize long threads regardless of category.
@@ -108,6 +112,7 @@ def run_agent(
     todoist: bool = False,
     on_progress=None,
     mock: bool = False,
+    settings: Optional[Settings] = None,
 ) -> list[TriageResult]:
     """Triage every email and persist extracted tasks."""
     results: list[TriageResult] = []
@@ -121,6 +126,7 @@ def run_agent(
                 gmail_service=gmail_service,
                 save_drafts=save_drafts,
                 mock=mock,
+                settings=settings,
             )
         )
 
