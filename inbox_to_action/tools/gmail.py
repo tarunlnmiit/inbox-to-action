@@ -163,13 +163,15 @@ def compose_reply(email: Email, reasoner: Reasoner) -> str:
 
 
 def create_draft(
-    to: str, subject: str, body: str, *, thread_id: str = "", service=None
+    to: str, subject: str, body: str, *, thread_id: str = "", service=None, mock: bool = False
 ) -> str:
     """Low-level Gmail DRAFT creation. Never sends. Returns the draft id.
 
-    Returns 'mock-draft' when no Gmail service is configured (demo/offline).
+    Returns 'mock-draft' when `mock=True` or no Gmail service is configured
+    (demo/offline). `mock=True` guarantees no real Gmail write even if a token
+    is cached — so `--mock` runs never touch the real account.
     """
-    if service is None and not _TOKEN_PATH.exists():
+    if mock or (service is None and not _TOKEN_PATH.exists()):
         return "mock-draft"
 
     svc = _service(service)
@@ -191,7 +193,7 @@ def create_draft(
     return draft.get("id", "")
 
 
-def save_draft(email: Email, body_text: str, *, service=None) -> str:
+def save_draft(email: Email, body_text: str, *, service=None, mock: bool = False) -> str:
     """Save a reply to `email` as a Gmail draft (adds Re: to the subject)."""
     return create_draft(
         to=email.sender,
@@ -199,6 +201,7 @@ def save_draft(email: Email, body_text: str, *, service=None) -> str:
         body=body_text,
         thread_id=email.thread_id,
         service=service,
+        mock=mock,
     )
 
 

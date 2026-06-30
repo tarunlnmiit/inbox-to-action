@@ -82,20 +82,25 @@ inbox_to_action.mcp_server` entry point used by Claude Code / Glama).
 
 Pick whichever keyless/free path you like — all run the full pipeline at no cost:
 
-**Option A — Ollama (truly keyless, fully local):**
+**Option A — `claude` CLI (keyless, fastest; uses your Claude Code login):**
+```bash
+PROVIDER=claude inbox-to-action run --mock     # no API key; needs `claude` on PATH
+```
+
+**Option B — Ollama (truly keyless, fully local):**
 ```bash
 ollama serve            # in another terminal
 ollama pull llama3.1
 PROVIDER=ollama inbox-to-action run --mock     # uses bundled sample inbox
 ```
 
-**Option B — OpenRouter free model (free signup key):**
+**Option C — OpenRouter free model (free signup key):**
 ```bash
 # put OPENROUTER_API_KEY in .env (free models, $0 spend)
 inbox-to-action run --mock                      # default PROVIDER=openrouter
 ```
 
-**Option C — inside Claude Code (keyless, Claude Code is the LLM):** see below.
+**Option D — inside Claude Code (keyless, Claude Code is the LLM):** see below.
 
 `--mock` uses the bundled sample inbox so you can see a full report with **zero Gmail
 setup**. Drop `--mock` once you've authorized Gmail. Free OpenRouter models are often

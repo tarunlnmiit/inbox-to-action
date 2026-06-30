@@ -83,6 +83,7 @@ def run(
             todoist=todoist,
             tasks_path=tasks_path,
             on_progress=progress,
+            mock=mock,
         )
     except llm_client.LLMError as e:
         typer.secho(str(e), fg=typer.colors.RED)

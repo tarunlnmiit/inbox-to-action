@@ -58,6 +58,14 @@ def test_fetch_emails_real_uses_service():
     assert emails[0].subject == "Hi"
 
 
+def test_create_draft_mock_never_touches_service():
+    """mock=True returns mock-draft without any Gmail write, even with a service."""
+    service = MagicMock()
+    out = gmail.create_draft("to@x.com", "Re: Hi", "body", service=service, mock=True)
+    assert out == "mock-draft"
+    service.users.assert_not_called()
+
+
 def test_create_draft_uses_drafts_create_not_send():
     service = MagicMock()
     service.users().drafts().create().execute.return_value = {"id": "draft-123"}
