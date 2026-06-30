@@ -1,5 +1,7 @@
 # inbox-to-action
 
+[![inbox-to-action MCP server](https://glama.ai/mcp/servers/tarunlnmiit/inbox-to-action/badges/score.svg)](https://glama.ai/mcp/servers/tarunlnmiit/inbox-to-action)
+
 > One command. Your inbox triaged, summarized, drafted, and turned into tasks — in a single agentic pass.
 
 <!-- DEMO REEL -->
@@ -67,11 +69,14 @@ fetch → for each email:  classify ─┬─ action_needed → extract_tasks + 
 ## Quick start (2 minutes)
 
 ```bash
-git clone <repo> && cd inbox-to-action
+git clone https://github.com/tarunlnmiit/inbox-to-action.git && cd inbox-to-action
 python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+pip install -e '.[mcp]'        # installs the `inbox-to-action` command
 cp .env.example .env
 ```
+
+This installs an `inbox-to-action` console command (and the `python -m
+inbox_to_action.mcp_server` entry point used by Claude Code / Glama).
 
 ### Free-first: run end-to-end on zero spend
 
@@ -81,28 +86,29 @@ Pick whichever keyless/free path you like — all run the full pipeline at no co
 ```bash
 ollama serve            # in another terminal
 ollama pull llama3.1
-PROVIDER=ollama python main.py run --mock     # uses bundled sample inbox
+PROVIDER=ollama inbox-to-action run --mock     # uses bundled sample inbox
 ```
 
 **Option B — OpenRouter free model (free signup key):**
 ```bash
 # put OPENROUTER_API_KEY in .env (free models, $0 spend)
-python main.py run --mock                      # default PROVIDER=openrouter
+inbox-to-action run --mock                      # default PROVIDER=openrouter
 ```
 
 **Option C — inside Claude Code (keyless, Claude Code is the LLM):** see below.
 
-`--mock` uses `fixtures/sample_inbox.json` so you can see a full report with **zero Gmail
-setup**. Drop `--mock` once you've authorized Gmail.
+`--mock` uses the bundled sample inbox so you can see a full report with **zero Gmail
+setup**. Drop `--mock` once you've authorized Gmail. Free OpenRouter models are often
+rate-limited; the client auto-rotates a fallback list and retries with backoff.
 
 ### Real inbox
 
 ```bash
 # 1. Create OAuth credentials in Google Cloud Console (Desktop app),
 #    download client_secret.json into the project, then:
-python main.py auth                 # one-time consent (read + compose only)
-python main.py run --since 24h      # triage the last day
-python main.py run --since 3d --todoist
+inbox-to-action auth                 # one-time consent (read + compose only)
+inbox-to-action run --since 24h      # triage the last day
+inbox-to-action run --since 3d --todoist
 ```
 
 ## Use inside Claude Code (keyless)
@@ -115,8 +121,12 @@ Exposes IO-only tools (`fetch_emails`, `save_gmail_draft`, `append_tasks`, `writ
 Claude Code does the classify/summarize/extract/draft reasoning itself and calls these.
 
 ```bash
-claude mcp add inbox-to-action -- python /abs/path/to/inbox-to-action/main.py mcp
+# after `pip install -e '.[mcp]'`
+claude mcp add inbox-to-action -- python -m inbox_to_action.mcp_server
 ```
+
+This is the same stdio server that the [Glama](https://glama.ai) listing builds from
+the bundled `Dockerfile` (`CMD python -m inbox_to_action.mcp_server`).
 
 ### Skill
 Copy `skills/inbox-to-action/` into your Claude Code skills directory, then type
@@ -130,7 +140,7 @@ The Anthropic provider uses the official SDK with a zero-arg client, so it picks
 
 ```bash
 ant auth login
-PROVIDER=anthropic python main.py run --mock   # default model: claude-opus-4-8
+PROVIDER=anthropic inbox-to-action run --mock   # default model: claude-opus-4-8
 ```
 
 ## Configuration

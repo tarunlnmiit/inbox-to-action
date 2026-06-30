@@ -1,5 +1,5 @@
-import report
-from models import Email, Task, TriageResult
+from inbox_to_action import report
+from inbox_to_action.models import Email, Task, TriageResult
 
 
 def _result(**kw):

@@ -1,8 +1,8 @@
 from pathlib import Path
 from unittest.mock import MagicMock
 
-from models import Email
-from tools import gmail
+from inbox_to_action.models import Email
+from inbox_to_action.tools import gmail
 
 
 def test_scopes_exclude_send():

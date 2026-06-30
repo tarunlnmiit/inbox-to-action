@@ -1,6 +1,6 @@
-import agent
+from inbox_to_action import agent
 from conftest import FakeReasoner
-from models import Email
+from inbox_to_action.models import Email
 
 
 def _router(messages, json_schema):
@@ -73,7 +73,7 @@ def test_run_agent_progress_callback(tmp_path):
 
 
 def test_category_counts():
-    from models import TriageResult
+    from inbox_to_action.models import TriageResult
 
     results = [
         TriageResult(email=Email(id="1", sender="", subject="", body=""), category="fyi"),

@@ -5,8 +5,8 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from models import Email, Task
-from reasoner import Reasoner
+from inbox_to_action.models import Email, Task
+from inbox_to_action.reasoner import Reasoner
 
 _SCHEMA = {
     "type": "object",

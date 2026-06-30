@@ -1,5 +1,5 @@
 from conftest import FakeReasoner
-from tools import summarizer
+from inbox_to_action.tools import summarizer
 
 
 def test_needs_summary_threshold(sample_email, long_email):

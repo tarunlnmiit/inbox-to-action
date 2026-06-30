@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from models import Email
+from inbox_to_action.models import Email
 
 
 class FakeReasoner:

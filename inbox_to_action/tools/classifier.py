@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from models import CATEGORIES, Email
-from reasoner import Reasoner
+from inbox_to_action.models import CATEGORIES, Email
+from inbox_to_action.reasoner import Reasoner
 
 _SCHEMA = {
     "type": "object",

@@ -2,8 +2,8 @@ import httpx
 import respx
 
 from conftest import FakeReasoner
-from models import Task
-from tools import tasks
+from inbox_to_action.models import Task
+from inbox_to_action.tools import tasks
 
 
 def test_extract_tasks_parses(sample_email):

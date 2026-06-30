@@ -1,5 +1,5 @@
 from conftest import FakeReasoner
-from tools import classifier
+from inbox_to_action.tools import classifier
 
 
 def test_classify_returns_category(sample_email):

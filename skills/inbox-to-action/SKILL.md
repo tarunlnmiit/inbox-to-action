@@ -41,5 +41,5 @@ extract, and draft directly, then call the project's IO tools to persist results
 - Keep the whole pass under ~60 seconds for a demo.
 - If the MCP server is not connected, do the reasoning anyway and write
   `triage-report.md` / `tasks.md` directly with the Write tool; tell the user to
-  connect the MCP server (`claude mcp add inbox-to-action -- inbox-to-action mcp`)
+  connect the MCP server (`claude mcp add inbox-to-action -- python -m inbox_to_action.mcp_server`)
   to enable real Gmail drafts.
