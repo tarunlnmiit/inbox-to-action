@@ -21,7 +21,7 @@ _OPENAI_COMPAT = {
     "openrouter": {
         "base_url": "https://openrouter.ai/api/v1",
         "key_env": "OPENROUTER_API_KEY",
-        "default_model": "meta-llama/llama-3.1-8b-instruct:free",
+        "default_model": "google/gemma-4-31b-it:free",
     },
     "openai": {
         "base_url": "https://api.openai.com/v1",
@@ -41,6 +41,19 @@ _OPENAI_COMPAT = {
 }
 
 _ANTHROPIC_DEFAULT_MODEL = "claude-opus-4-8"
+
+# OpenRouter free models rotate availability and get "rate-limited upstream"
+# (429) often. We hand OpenRouter a fallback list so it auto-routes to the next
+# available model, and retry transient 429/5xx with backoff. These are all
+# verified-available free models (2026-06-30).
+_OPENROUTER_FREE_FALLBACKS = [
+    "google/gemma-4-31b-it:free",
+    "google/gemma-4-26b-a4b-it:free",
+    "meta-llama/llama-3.3-70b-instruct:free",
+]
+_RETRY_STATUS = {429, 502, 503}
+_MAX_RETRIES = 4
+_RETRY_BASE_SECONDS = 3.0
 
 
 class LLMError(RuntimeError):
@@ -130,11 +143,17 @@ def _complete_openai_compat(
         key = os.environ.get(cfg["key_env"], "")
         headers["Authorization"] = f"Bearer {key}"
 
+    primary = _model(provider)
     payload: dict[str, Any] = {
-        "model": _model(provider),
+        "model": primary,
         "messages": messages,
         "max_tokens": max_tokens,
     }
+    # OpenRouter: supply a fallback model list so it auto-routes past a
+    # throttled free model within a single request.
+    if provider == "openrouter":
+        fallbacks = [m for m in _OPENROUTER_FREE_FALLBACKS if m != primary]
+        payload["models"] = [primary, *fallbacks]
     if json_schema is not None:
         payload["response_format"] = {
             "type": "json_schema",
@@ -142,17 +161,46 @@ def _complete_openai_compat(
         }
 
     url = f"{cfg['base_url']}/chat/completions"
-    try:
-        resp = httpx.post(url, headers=headers, json=payload, timeout=60)
-        resp.raise_for_status()
-    except httpx.HTTPError as e:
-        raise LLMError(f"{provider} request failed: {e}") from e
+    resp = _post_with_retry(httpx, url, headers, payload, provider)
 
     data = resp.json()
     text = data["choices"][0]["message"]["content"]
     if json_schema is not None:
         return _parse_json(text)
     return text
+
+
+def _post_with_retry(httpx, url, headers, payload, provider):
+    """POST with backoff on transient 429/5xx. Other errors raise immediately."""
+    import time
+
+    last_exc: Exception | None = None
+    for attempt in range(_MAX_RETRIES + 1):
+        try:
+            resp = httpx.post(url, headers=headers, json=payload, timeout=60)
+            resp.raise_for_status()
+            return resp
+        except httpx.HTTPStatusError as e:
+            status = e.response.status_code
+            last_exc = e
+            if status in _RETRY_STATUS and attempt < _MAX_RETRIES:
+                time.sleep(_retry_delay(e.response, attempt))
+                continue
+            raise LLMError(f"{provider} request failed: {e}") from e
+        except httpx.HTTPError as e:
+            raise LLMError(f"{provider} request failed: {e}") from e
+    raise LLMError(f"{provider} request failed: {last_exc}")  # pragma: no cover
+
+
+def _retry_delay(response, attempt: int) -> float:
+    """Honor Retry-After when present, else exponential backoff."""
+    retry_after = response.headers.get("retry-after")
+    if retry_after:
+        try:
+            return float(retry_after)
+        except ValueError:
+            pass
+    return _RETRY_BASE_SECONDS * (2**attempt)
 
 
 def _complete_anthropic(
