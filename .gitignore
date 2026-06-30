@@ -1,0 +1,31 @@
+# Secrets & tokens
+.env
+client_secret*.json
+token.json
+*.token
+
+# Generated output
+triage-report.md
+tasks.md
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# Internal planning/spec docs — never shared to the public repo
+*-spec.md
+*-plan*.md
+plans/
+inbox-to-action-claude-code-spec.md
