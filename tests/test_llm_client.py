@@ -186,3 +186,107 @@ def test_complete_anthropic_keyless(monkeypatch):
     assert captured["thinking"] == {"type": "adaptive"}
     assert "budget_tokens" not in str(captured)
     assert captured["system"] == "sys"
+
+
+# ── claude CLI provider (keyless) ───────────────────────────────────────────
+def _claude_envelope(result: str, is_error: bool = False) -> str:
+    """Mimic `claude -p --output-format json` event-array output."""
+    import json as _json
+
+    return _json.dumps(
+        [
+            {"type": "system", "subtype": "init"},
+            {"type": "result", "is_error": is_error, "result": result},
+        ]
+    )
+
+
+def _fake_run(captured, stdout="", returncode=0, stderr=""):
+    def run(cmd, *a, **k):
+        captured["cmd"] = cmd
+        return types.SimpleNamespace(
+            stdout=stdout, stderr=stderr, returncode=returncode
+        )
+
+    return run
+
+
+def test_validate_claude_requires_cli(monkeypatch):
+    monkeypatch.setenv("PROVIDER", "claude")
+    monkeypatch.setattr(llm_client.shutil, "which", lambda _: None)
+    with pytest.raises(llm_client.LLMError):
+        llm_client.validate_config()
+    monkeypatch.setattr(llm_client.shutil, "which", lambda _: "/usr/bin/claude")
+    llm_client.validate_config()  # ok
+
+
+def test_complete_claude_text(monkeypatch):
+    monkeypatch.setenv("PROVIDER", "claude")
+    monkeypatch.delenv("MODEL", raising=False)
+    monkeypatch.setattr(llm_client.shutil, "which", lambda _: "/usr/bin/claude")
+    cap = {}
+    monkeypatch.setattr(
+        llm_client.subprocess, "run", _fake_run(cap, stdout=_claude_envelope("PONG"))
+    )
+    out = llm_client.complete([{"role": "user", "content": "ping"}])
+    assert out == "PONG"
+    assert cap["cmd"][:2] == ["claude", "-p"]
+    assert "--output-format" in cap["cmd"] and "json" in cap["cmd"]
+    assert "--json-schema" not in cap["cmd"]  # text mode
+    assert "--model" not in cap["cmd"]  # MODEL unset → use CLI default
+
+
+def test_complete_claude_schema(monkeypatch):
+    monkeypatch.setenv("PROVIDER", "claude")
+    monkeypatch.setattr(llm_client.shutil, "which", lambda _: "/usr/bin/claude")
+    cap = {}
+    monkeypatch.setattr(
+        llm_client.subprocess,
+        "run",
+        _fake_run(cap, stdout=_claude_envelope('{"category":"action_needed"}')),
+    )
+    schema = {"type": "object", "properties": {"category": {"type": "string"}}}
+    out = llm_client.complete(
+        [{"role": "system", "content": "sys"}, {"role": "user", "content": "hi"}],
+        json_schema=schema,
+    )
+    assert out == {"category": "action_needed"}
+    assert "--json-schema" in cap["cmd"]
+    assert "--append-system-prompt" in cap["cmd"]
+
+
+def test_complete_claude_nonzero_exit(monkeypatch):
+    monkeypatch.setenv("PROVIDER", "claude")
+    monkeypatch.setattr(llm_client.shutil, "which", lambda _: "/usr/bin/claude")
+    monkeypatch.setattr(
+        llm_client.subprocess,
+        "run",
+        _fake_run({}, returncode=1, stderr="boom"),
+    )
+    with pytest.raises(llm_client.LLMError):
+        llm_client.complete([{"role": "user", "content": "x"}])
+
+
+def test_complete_claude_error_result(monkeypatch):
+    monkeypatch.setenv("PROVIDER", "claude")
+    monkeypatch.setattr(llm_client.shutil, "which", lambda _: "/usr/bin/claude")
+    monkeypatch.setattr(
+        llm_client.subprocess,
+        "run",
+        _fake_run({}, stdout=_claude_envelope("rate limited", is_error=True)),
+    )
+    with pytest.raises(llm_client.LLMError):
+        llm_client.complete([{"role": "user", "content": "x"}])
+
+
+def test_complete_claude_model_override(monkeypatch):
+    monkeypatch.setenv("PROVIDER", "claude")
+    monkeypatch.setenv("MODEL", "claude-sonnet-4-6")
+    monkeypatch.setattr(llm_client.shutil, "which", lambda _: "/usr/bin/claude")
+    cap = {}
+    monkeypatch.setattr(
+        llm_client.subprocess, "run", _fake_run(cap, stdout=_claude_envelope("ok"))
+    )
+    llm_client.complete([{"role": "user", "content": "x"}])
+    assert "--model" in cap["cmd"]
+    assert "claude-sonnet-4-6" in cap["cmd"]

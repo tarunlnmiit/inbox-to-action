@@ -7,6 +7,15 @@ import pytest
 from inbox_to_action.models import Email
 
 
+@pytest.fixture(autouse=True)
+def _isolate_gmail_token(monkeypatch, tmp_path):
+    """Point the Gmail token at a nonexistent path so tests never touch a real
+    cached token (which would flip create_draft from 'mock-draft' to live API)."""
+    from inbox_to_action.tools import gmail
+
+    monkeypatch.setattr(gmail, "_TOKEN_PATH", tmp_path / "no-token.json")
+
+
 class FakeReasoner:
     """A scriptable Reasoner for tests.
 

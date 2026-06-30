@@ -14,6 +14,8 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
+import subprocess
 from typing import Any, Optional
 
 # OpenAI-compatible provider config: base_url + which env var holds the key.
@@ -55,6 +57,11 @@ _RETRY_STATUS = {429, 502, 503}
 _MAX_RETRIES = 4
 _RETRY_BASE_SECONDS = 3.0
 
+# Keyless provider backed by the local `claude` CLI (Claude Code). Uses the
+# user's existing login — no API key. Great for fast iteration.
+_CLAUDE_PROVIDERS = {"claude", "claude_cli"}
+_CLAUDE_TIMEOUT_SECONDS = 180
+
 
 class LLMError(RuntimeError):
     """Raised on provider/config errors with a user-friendly message."""
@@ -72,6 +79,8 @@ def _model(provider: str) -> str:
         return _OPENAI_COMPAT[provider]["default_model"]
     if provider == "anthropic":
         return _ANTHROPIC_DEFAULT_MODEL
+    if provider in _CLAUDE_PROVIDERS:
+        return ""  # empty → let the claude CLI use its configured default
     raise LLMError(f"Unknown provider {provider!r}")
 
 
@@ -93,9 +102,15 @@ def validate_config(provider: Optional[str] = None) -> None:
         # Keyless is allowed (ant auth login). Nothing to validate up front;
         # the SDK resolves credentials at call time.
         return
+    if provider in _CLAUDE_PROVIDERS:
+        if shutil.which("claude") is None:
+            raise LLMError(
+                "PROVIDER=claude needs the `claude` CLI (Claude Code) on PATH."
+            )
+        return
     raise LLMError(
         f"Unknown PROVIDER={provider!r}. Use one of: "
-        f"{', '.join(list(_OPENAI_COMPAT) + ['anthropic', 'host'])}."
+        f"{', '.join(list(_OPENAI_COMPAT) + ['anthropic', 'claude', 'host'])}."
     )
 
 
@@ -125,6 +140,8 @@ def complete(
         return _complete_anthropic(
             messages, json_schema=json_schema, max_tokens=max_tokens
         )
+    if provider in _CLAUDE_PROVIDERS:
+        return _complete_claude_cli(messages, json_schema=json_schema)
     raise LLMError(f"Unknown provider {provider!r}")
 
 
@@ -250,6 +267,60 @@ def _complete_anthropic(
     if json_schema is not None:
         return _parse_json(text)
     return text
+
+
+def _complete_claude_cli(
+    messages: list[dict[str, str]],
+    *,
+    json_schema: Optional[dict[str, Any]],
+) -> Any:
+    """Keyless completion via the local `claude` CLI (Claude Code, headless).
+
+    Uses `--json-schema` for native structured output. No API key — relies on
+    the user's existing Claude Code login.
+    """
+    system = "\n".join(m["content"] for m in messages if m["role"] == "system")
+    user = "\n\n".join(m["content"] for m in messages if m["role"] != "system")
+
+    cmd = ["claude", "-p", user, "--output-format", "json"]
+    if system:
+        cmd += ["--append-system-prompt", system]
+    if json_schema is not None:
+        cmd += ["--json-schema", json.dumps(json_schema)]
+    model = _model("claude")
+    if model:
+        cmd += ["--model", model]
+
+    try:
+        proc = subprocess.run(
+            cmd, capture_output=True, text=True, timeout=_CLAUDE_TIMEOUT_SECONDS
+        )
+    except (OSError, subprocess.TimeoutExpired) as e:
+        raise LLMError(f"claude CLI failed: {e}") from e
+    if proc.returncode != 0:
+        raise LLMError(
+            f"claude CLI exited {proc.returncode}: {(proc.stderr or '')[:300]}"
+        )
+
+    text = _extract_claude_result(proc.stdout)
+    if json_schema is not None:
+        return _parse_json(text)
+    return text
+
+
+def _extract_claude_result(stdout: str) -> str:
+    """Pull the `result` text from the claude CLI's JSON event output."""
+    try:
+        data = json.loads(stdout)
+    except json.JSONDecodeError as e:
+        raise LLMError(f"claude CLI returned non-JSON: {stdout[:200]!r}") from e
+    events = data if isinstance(data, list) else [data]
+    for el in events:
+        if isinstance(el, dict) and el.get("type") == "result":
+            if el.get("is_error"):
+                raise LLMError(f"claude CLI error: {el.get('result')!r}")
+            return el.get("result", "")
+    raise LLMError("claude CLI output had no result element")
 
 
 def _parse_json(text: str) -> dict:

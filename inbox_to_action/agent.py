@@ -71,6 +71,7 @@ def triage_email(
     *,
     gmail_service=None,
     save_drafts: bool = True,
+    mock: bool = False,
 ) -> TriageResult:
     """Run the per-email agentic trajectory. Model decides the path."""
     category = classifier.classify_email(email, reasoner)
@@ -86,7 +87,7 @@ def triage_email(
         result.draft_preview = reply_text
         if save_drafts and reply_text:
             result.draft_id = gmail.save_draft(
-                email, reply_text, service=gmail_service
+                email, reply_text, service=gmail_service, mock=mock
             )
 
         needs_cal, reason = calendar_flag.flag_for_calendar(email, reasoner)
@@ -106,6 +107,7 @@ def run_agent(
     tasks_path: str | Path = "tasks.md",
     todoist: bool = False,
     on_progress=None,
+    mock: bool = False,
 ) -> list[TriageResult]:
     """Triage every email and persist extracted tasks."""
     results: list[TriageResult] = []
@@ -114,7 +116,11 @@ def run_agent(
             on_progress(i, len(emails), email)
         results.append(
             triage_email(
-                email, reasoner, gmail_service=gmail_service, save_drafts=save_drafts
+                email,
+                reasoner,
+                gmail_service=gmail_service,
+                save_drafts=save_drafts,
+                mock=mock,
             )
         )
 
