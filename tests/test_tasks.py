@@ -22,6 +22,29 @@ def test_extract_tasks_parses(sample_email):
     assert out[0].source_email_id == sample_email.id
 
 
+def test_clean_deadline_strips_commentary():
+    assert tasks._clean_deadline("Thursday, null for deadline") == "Thursday"
+    assert tasks._clean_deadline("this week ( drafted by Maria)") == "this week"
+    assert tasks._clean_deadline("by Friday") == "by Friday"
+    assert tasks._clean_deadline("2026-07-01.") == "2026-07-01"
+
+
+def test_clean_deadline_rejects_junk():
+    assert tasks._clean_deadline(None) is None
+    assert tasks._clean_deadline("") is None
+    assert tasks._clean_deadline("null") is None
+    assert tasks._clean_deadline("x" * 41) is None  # too long = leaked prose
+    assert tasks._clean_deadline(123) is None
+
+
+def test_extract_tasks_sanitizes_deadline(sample_email):
+    r = FakeReasoner(
+        lambda m, s: {"tasks": [{"text": "Do X", "deadline": "Friday, as noted"}]}
+    )
+    out = tasks.extract_tasks(sample_email, r)
+    assert out[0].deadline == "Friday"
+
+
 def test_extract_tasks_non_dict(sample_email):
     r = FakeReasoner(lambda m, s: "nope")
     assert tasks.extract_tasks(sample_email, r) == []
