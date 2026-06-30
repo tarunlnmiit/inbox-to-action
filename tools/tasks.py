@@ -29,10 +29,28 @@ _SCHEMA = {
 }
 
 _SYSTEM = (
-    "Extract concrete action items the recipient must do, with deadlines if "
-    "stated. Return an empty list if there are none. Keep each task one line. "
-    "Use null for deadline when none is given."
+    "Extract concrete action items the recipient must do. "
+    "For each task: 'text' is one imperative line; 'deadline' is ONLY a short "
+    "date or time phrase exactly as stated (e.g. 'Thursday', 'by Friday', "
+    "'2026-07-01'), or null when none is given. Never put explanations, names, "
+    "or the word 'null' inside the deadline string. Return an empty list if "
+    "there are no action items."
 )
+
+# Deadline strings longer than this are almost certainly the model leaking
+# commentary into the field; we drop them rather than render garbage.
+_MAX_DEADLINE_LEN = 40
+
+
+def _clean_deadline(value) -> str | None:
+    """Keep only a short, sensible deadline phrase; else return None."""
+    if not isinstance(value, str):
+        return None
+    # Take the first clause; small models sometimes append commentary.
+    d = value.split(",")[0].split("(")[0].strip().strip(".")
+    if not d or d.lower() == "null" or len(d) > _MAX_DEADLINE_LEN:
+        return None
+    return d
 
 
 def extract_tasks(email: Email, reasoner: Reasoner) -> list[Task]:
@@ -54,7 +72,7 @@ def extract_tasks(email: Email, reasoner: Reasoner) -> list[Task]:
         tasks.append(
             Task(
                 text=text,
-                deadline=item.get("deadline") or None,
+                deadline=_clean_deadline(item.get("deadline")),
                 source_email_id=email.id,
             )
         )
