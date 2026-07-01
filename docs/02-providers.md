@@ -68,7 +68,7 @@ Free-tier models available; the client auto-rotates a fallback list and retries 
 1. Create an account: <https://openrouter.ai>
 2. **Keys → Create key** → copy (starts with `sk-or-v1-…`).
 
-> 📷 _Screenshot: `images/02-openrouter-keys.png` — the OpenRouter **Keys** page with **Create key**; the key value blurred._
+![OpenRouter API Keys page with Create key](images/02-openrouter-keys.png)
 
 ```bash
 # .env
@@ -89,7 +89,7 @@ PROVIDER=openrouter inbox-to-action run --mock
 
 1. Sign in at <https://build.nvidia.com> and create an API key (starts with `nvapi-…`).
 
-> 📷 _Screenshot: `images/02-nim-key.png` — the NVIDIA **API key** dialog; key value blurred._
+![NVIDIA build API Keys page](images/02-nim-key.png)
 
 ```bash
 # .env
@@ -110,7 +110,7 @@ PROVIDER=nim inbox-to-action run --mock
 
 1. Create a key at <https://platform.openai.com/api-keys> (starts with `sk-…`).
 
-> 📷 _Screenshot: `images/02-openai-key.png` — the OpenAI API keys page; key value blurred._
+![OpenAI API keys page](images/02-openai-key.png)
 
 ```bash
 # .env

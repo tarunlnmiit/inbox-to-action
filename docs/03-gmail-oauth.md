@@ -13,13 +13,13 @@ To read your inbox and save drafts, you create **your own** Google OAuth app and
 1. Go to <https://console.cloud.google.com/> .
 2. Top bar → project dropdown → **New Project** → name it (e.g. `inbox-to-action`) → **Create**.
 
-> 📷 _Screenshot: `images/03-new-project.png` — the New Project dialog; project name visible, any account email blurred._
+![Google Cloud project picker with New project](images/03-new-project.png)
 
 ## Step 2 — Enable the Gmail API
 
 1. **APIs & Services → Library** → search **Gmail API** → **Enable**.
 
-> 📷 _Screenshot: `images/03-enable-gmail-api.png` — the Gmail API page with the **Enable** button._
+![Gmail API page with Enable button](images/03-enable-gmail-api.png)
 
 ## Step 3 — Configure the OAuth consent screen
 
@@ -28,7 +28,7 @@ To read your inbox and save drafts, you create **your own** Google OAuth app and
 3. Fill the required fields (app name, your email as support + developer contact). Save through the steps. You can skip optional fields.
 4. Leave the app in **Testing** mode (default). No verification needed.
 
-> 📷 _Screenshot: `images/03-consent-screen.png` — the consent screen summary showing **Publishing status: Testing**; support/developer emails blurred._
+![OAuth consent screen showing Publishing status Testing](images/03-consent-screen.png)
 
 ## Step 4 — Add yourself as a Test user (critical)
 
@@ -38,7 +38,7 @@ In **Testing** mode, only listed test users can authorize the app.
 2. Add the **exact Gmail address** you'll triage.
 3. **Save**.
 
-> 📷 _Screenshot: `images/03-test-users.png` — the Test users list; the added email blurred._
+![Test users list with added email](images/03-test-users.png)
 
 > ⚠️ **If you skip this** you'll get `Error 403: access_denied — App has not completed the Google verification process` at sign-in. The fix is always: add that account here.
 
@@ -48,7 +48,7 @@ In **Testing** mode, only listed test users can authorize the app.
 2. Application type: **Desktop app** → name it → **Create**.
 3. In the dialog → **Download JSON**. Save it as `client_secret.json`.
 
-> 📷 _Screenshot: `images/03-create-client.png` — the "Desktop app" creation + the download dialog; the **Client ID / Client secret** blurred._
+![OAuth 2.0 Client IDs with a Desktop client](images/03-create-client.png)
 
 ## Step 6 — Point the tool at your secret
 

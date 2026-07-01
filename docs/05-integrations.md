@@ -12,12 +12,12 @@ Push a concise run summary to your phone: counts, action-needed subjects (draft-
 
 1. In Telegram, message **@BotFather** → send `/newbot` → follow prompts → copy the **bot token** (looks like `8024470769:AAFw…`).
 
-   > 📷 _Screenshot: `images/05-botfather.png` — the BotFather chat after `/newbot`; the **bot token** blurred._
+   ![BotFather chat after /newbot with the bot token blurred](images/05-botfather.png)
 
 2. Message your new bot anything (say "hi") so it has a chat with you.
 3. Get your **chat id**: open `https://api.telegram.org/bot<token>/getUpdates` in a browser and copy `"chat":{"id": …}` — or message **@userinfobot**.
 
-   > 📷 _Screenshot: `images/05-chatid.png` — the getUpdates JSON with the chat id; token in the URL blurred._
+   > **Tip:** if `getUpdates` returns `{"ok":true,"result":[]}`, you haven't messaged the bot yet (or the update expired) — send it a message, then reload the URL.
 
 4. Put both in `.env`:
 
