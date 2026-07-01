@@ -5,6 +5,7 @@ on:
     branches: [main]
   push:
     branches: [main]
+    tags: ["v*"]
 
 jobs:
   test:
@@ -28,3 +29,22 @@ jobs:
 
       - name: Run tests
         run: pytest --cov=. --cov-report=term-missing
+
+  # Publish to PyPI on a version tag (e.g. v0.2.0), after tests pass.
+  # Uses OIDC Trusted Publishing — no API token stored. One-time setup:
+  # configure the PyPI project's Trusted Publisher (repo tarunlnmiit/inbox-to-action,
+  # workflow ci.yml). See SETUP.md.
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install hatch
+      - run: hatch build
+      - uses: pypa/gh-action-pypi-publish@release/v1

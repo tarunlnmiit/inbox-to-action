@@ -1,8 +1,24 @@
 # inbox-to-action
 
+[![PyPI version](https://img.shields.io/pypi/v/inbox-to-action)](https://pypi.org/project/inbox-to-action/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/tarunlnmiit/inbox-to-action?style=social)](https://github.com/tarunlnmiit/inbox-to-action)
 [![inbox-to-action MCP server](https://glama.ai/mcp/servers/tarunlnmiit/inbox-to-action/badges/score.svg)](https://glama.ai/mcp/servers/tarunlnmiit/inbox-to-action)
 
 > One command. Your inbox triaged, summarized, drafted, and turned into tasks — in a single agentic pass.
+
+## Install
+
+```bash
+pip install inbox-to-action          # or: pipx install inbox-to-action
+uvx inbox-to-action run --mock       # zero-install trial (uv)
+pip install 'inbox-to-action[mcp]'   # + MCP server for Claude Code
+docker run --rm ghcr.io/tarunlnmiit/inbox-to-action   # MCP server (stdio)
+```
+
+Try it with zero setup: `inbox-to-action run --mock` (bundled sample inbox).
+See [SETUP.md](SETUP.md) for the full guide.
 
 <!-- DEMO REEL -->
 <p align="center">
