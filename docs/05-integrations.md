@@ -15,7 +15,14 @@ Push a concise run summary to your phone: counts, action-needed subjects (draft-
    ![BotFather chat after /newbot with the bot token blurred](images/05-botfather.png)
 
 2. Message your new bot anything (say "hi") so it has a chat with you.
-3. Get your **chat id**: open `https://api.telegram.org/bot<token>/getUpdates` in a browser and copy `"chat":{"id": …}` — or message **@userinfobot**.
+3. Get your **chat id**: open `https://api.telegram.org/bot<token>/getUpdates` in a browser and read `"chat":{"id": …}` from the JSON — or just message **@userinfobot**.
+
+   ```json
+   {"ok":true,"result":[{"update_id":…,
+     "message":{…,"chat":{"id":123456789,"type":"private"},"text":"hi"}}]}
+   ```
+
+   The number after `"chat":{"id":` is your `TELEGRAM_CHAT_ID` (not a secret).
 
    > **Tip:** if `getUpdates` returns `{"ok":true,"result":[]}`, you haven't messaged the bot yet (or the update expired) — send it a message, then reload the URL.
 
