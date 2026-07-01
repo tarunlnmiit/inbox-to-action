@@ -81,7 +81,8 @@ def send_telegram(
     Skips silently (no HTTP) when the bot token / chat id is missing or there are
     no results — same contract as `push_todoist`.
     """
-    token = token or os.environ.get("TELEGRAM_BOT_TOKEN")
+    # TELEGRAM_TOKEN is accepted as an alias (autopilot-jobs uses that name).
+    token = token or os.environ.get("TELEGRAM_BOT_TOKEN") or os.environ.get("TELEGRAM_TOKEN")
     chat_id = chat_id or os.environ.get("TELEGRAM_CHAT_ID")
     if not token or not chat_id or not results:
         return False

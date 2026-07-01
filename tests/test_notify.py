@@ -54,6 +54,7 @@ def test_format_summary_truncates_long_input():
 
 def test_send_telegram_skips_when_unconfigured(monkeypatch):
     monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
+    monkeypatch.delenv("TELEGRAM_TOKEN", raising=False)
     monkeypatch.delenv("TELEGRAM_CHAT_ID", raising=False)
 
     def boom(*a, **k):  # must NOT be called
@@ -61,6 +62,18 @@ def test_send_telegram_skips_when_unconfigured(monkeypatch):
 
     monkeypatch.setattr(httpx, "post", boom)
     assert notify.send_telegram(_results()) is False
+
+
+@respx.mock
+def test_send_telegram_accepts_telegram_token_alias(monkeypatch):
+    monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
+    monkeypatch.setenv("TELEGRAM_TOKEN", "ALIAS9")  # autopilot-jobs env name
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "42")
+    route = respx.post("https://api.telegram.org/botALIAS9/sendMessage").mock(
+        return_value=httpx.Response(200, json={"ok": True})
+    )
+    assert notify.send_telegram(_results()) is True
+    assert route.called
 
 
 def test_send_telegram_skips_on_empty_results(monkeypatch):
