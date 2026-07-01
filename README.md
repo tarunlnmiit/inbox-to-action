@@ -4,13 +4,11 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/tarunlnmiit/inbox-to-action?style=social)](https://github.com/tarunlnmiit/inbox-to-action)
-[![inbox-to-action MCP server](https://glama.ai/mcp/servers/tarunlnmiit/inbox-to-action/badges/score.svg)](https://glama.ai/mcp/servers/tarunlnmiit/inbox-to-action)
-[![smithery](https://smithery.ai/badge/@tarunlnmiit/inbox-to-action)](https://smithery.ai/server/@tarunlnmiit/inbox-to-action)
 
-Distributed on [PyPI](https://pypi.org/project/inbox-to-action/), the
-[Glama](https://glama.ai/mcp/servers/tarunlnmiit/inbox-to-action) &
-[Smithery](https://smithery.ai/server/@tarunlnmiit/inbox-to-action) MCP registries,
-and the [Official MCP Registry](https://registry.modelcontextprotocol.io) (`server.json`).
+Published on [PyPI](https://pypi.org/project/inbox-to-action/). MCP-registry manifests
+(`server.json` for the [Official MCP Registry](https://registry.modelcontextprotocol.io),
+`smithery.yaml` for [Smithery](https://smithery.ai), `glama.json` for [Glama](https://glama.ai))
+ship in the repo — registry listings are pending submission.
 
 > One command. Your inbox triaged, summarized, drafted, and turned into tasks — in a single agentic pass.
 
@@ -26,12 +24,6 @@ docker run --rm ghcr.io/tarunlnmiit/inbox-to-action   # MCP server (stdio)
 Try it with zero setup: `inbox-to-action run --mock` (bundled sample inbox).
 
 📖 **Full documentation → [docs/](docs/README.md)** — [install](docs/01-install.md) · [providers](docs/02-providers.md) · [Gmail OAuth](docs/03-gmail-oauth.md) · [multi-account](docs/04-multi-account.md) · [integrations](docs/05-integrations.md) · [MCP & Skill](docs/06-mcp-and-skill.md) · [config](docs/07-config-and-triage.md) · [troubleshooting](docs/08-troubleshooting.md) · [testing checklist](docs/09-testing-checklist.md). Quick version: [SETUP.md](SETUP.md).
-
-<!-- DEMO REEL -->
-<p align="center">
-  <em>📹 Demo GIF goes here — &lt;60s: run the command, watch the report appear.</em><br>
-  <code>docs/demo.gif</code>
-</p>
 
 ---
 
@@ -204,7 +196,7 @@ Claude Code does the classify/summarize/extract/draft reasoning itself and calls
 claude mcp add inbox-to-action -- python -m inbox_to_action.mcp_server
 ```
 
-This is the same stdio server that the [Glama](https://glama.ai) listing builds from
+This is the same stdio server that MCP registries (e.g. [Glama](https://glama.ai)) build from
 the bundled `Dockerfile` (`CMD python -m inbox_to_action.mcp_server`).
 
 ### Skill
