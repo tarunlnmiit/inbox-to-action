@@ -70,5 +70,6 @@ class TriageResult:
     tasks: list[Task] = field(default_factory=list)
     draft_preview: Optional[str] = None
     draft_id: Optional[str] = None  # Gmail draft id, when saved
+    draft_note: Optional[str] = None  # why no draft (no-reply sender / preview mode)
     needs_calendar: bool = False
     calendar_reason: Optional[str] = None

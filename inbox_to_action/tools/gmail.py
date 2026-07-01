@@ -9,6 +9,7 @@ from __future__ import annotations
 import base64
 import json
 import os
+import re
 from email.message import EmailMessage
 from pathlib import Path
 
@@ -216,3 +217,23 @@ def save_draft(email: Email, body_text: str, *, service=None, mock: bool = False
 
 def _reply_subject(subject: str) -> str:
     return subject if subject.lower().startswith("re:") else f"Re: {subject}"
+
+
+# Local part of automated senders that don't accept replies. A reply draft to
+# these is dead weight (bounces / ignored), so we skip drafting for them.
+_NOREPLY = re.compile(
+    r"(?:^|[._-])(?:no-?reply|do-?not-?reply|donotreply|noreply|"
+    r"notifications?|alerts?|mailer-daemon|postmaster|bounce|automated)"
+    r"(?:[._-]|@|$)",
+    re.IGNORECASE,
+)
+
+
+def is_noreply(sender: str) -> bool:
+    """True if `sender` is an automated/no-reply address (skip drafting a reply)."""
+    if not sender:
+        return False
+    m = re.search(r"<([^>]+)>", sender)  # "Name <addr@x>" → addr@x
+    addr = (m.group(1) if m else sender).strip().lower()
+    local = addr.split("@", 1)[0]
+    return bool(_NOREPLY.search(local))

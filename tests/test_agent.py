@@ -49,6 +49,26 @@ def test_triage_routes_draft_to_account(sample_email):
     assert calls["email_id"] == sample_email.id
 
 
+def test_triage_skips_draft_for_noreply_sender(sample_email):
+    """action_needed from a no-reply address → no draft, explanatory note kept."""
+    sample_email.sender = "no-reply@accounts.google.com"
+    result = agent.triage_email(sample_email, FakeReasoner(_router), save_drafts=True)
+    assert result.category == "action_needed"
+    assert result.draft_id is None and result.draft_preview is None
+    assert result.draft_note == "no reply — automated sender"
+
+
+def test_triage_no_drafts_mode_creates_no_draft(sample_email):
+    """--no-drafts still classifies + extracts but never composes/writes a draft."""
+    result = agent.triage_email(
+        sample_email, FakeReasoner(_router), save_drafts=True, no_drafts=True
+    )
+    assert result.category == "action_needed"
+    assert result.tasks  # extraction still runs
+    assert result.draft_id is None and result.draft_preview is None
+    assert result.draft_note == "preview mode — no draft created"
+
+
 def test_triage_fyi_skips_action_tools(sample_email):
     r = FakeReasoner(lambda m, s: {"category": "fyi"} if s and "category" in s.get("properties", {}) else None)
     result = agent.triage_email(sample_email, r)

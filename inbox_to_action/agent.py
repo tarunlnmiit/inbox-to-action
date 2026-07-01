@@ -74,11 +74,16 @@ def triage_email(
     *,
     gmail_service=None,
     save_drafts: bool = True,
+    no_drafts: bool = False,
     mock: bool = False,
     settings: Optional[Settings] = None,
     accounts: Optional[dict] = None,
 ) -> TriageResult:
-    """Run the per-email agentic trajectory. Model decides the path."""
+    """Run the per-email agentic trajectory. Model decides the path.
+
+    `no_drafts` = classify/summarize/extract only; never compose or write a draft
+    (safe preview). Automated/no-reply senders are also skipped for drafting.
+    """
     category = classifier.classify_email(email, reasoner, settings)
     result = TriageResult(email=email, category=category)
 
@@ -88,17 +93,22 @@ def triage_email(
     if category == "action_needed":
         result.tasks = tasks.extract_tasks(email, reasoner)
 
-        reply_text = gmail.compose_reply(email, reasoner)
-        result.draft_preview = reply_text
-        if save_drafts and reply_text:
-            account = accounts.get(email.account) if accounts else None
-            if account is not None:
-                result.draft_id = account.save_draft(email, reply_text, mock=mock)
-            else:
-                # Legacy single-account path (also used by tests).
-                result.draft_id = gmail.save_draft(
-                    email, reply_text, service=gmail_service, mock=mock
-                )
+        if no_drafts:
+            result.draft_note = "preview mode — no draft created"
+        elif gmail.is_noreply(email.sender):
+            result.draft_note = "no reply — automated sender"
+        else:
+            reply_text = gmail.compose_reply(email, reasoner)
+            result.draft_preview = reply_text
+            if save_drafts and reply_text:
+                account = accounts.get(email.account) if accounts else None
+                if account is not None:
+                    result.draft_id = account.save_draft(email, reply_text, mock=mock)
+                else:
+                    # Legacy single-account path (also used by tests).
+                    result.draft_id = gmail.save_draft(
+                        email, reply_text, service=gmail_service, mock=mock
+                    )
 
         needs_cal, reason = calendar_flag.flag_for_calendar(email, reasoner)
         result.needs_calendar = needs_cal
@@ -113,6 +123,7 @@ def run_agent(
     *,
     gmail_service=None,
     save_drafts: bool = True,
+    no_drafts: bool = False,
     write_tasks: bool = True,
     tasks_path: str | Path = "tasks.md",
     todoist: bool = False,
@@ -132,6 +143,7 @@ def run_agent(
                 reasoner,
                 gmail_service=gmail_service,
                 save_drafts=save_drafts,
+                no_drafts=no_drafts,
                 mock=mock,
                 settings=settings,
                 accounts=accounts,
