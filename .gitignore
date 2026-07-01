@@ -8,6 +8,9 @@ token.json
 triage-report.md
 tasks.md
 
+# Raw (unblurred) screenshots — may contain secrets. Only blurred docs/images/ are committed.
+docs/_raw/
+
 # Python
 __pycache__/
 *.py[cod]
