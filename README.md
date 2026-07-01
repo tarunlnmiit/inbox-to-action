@@ -25,6 +25,10 @@ Try it with zero setup: `inbox-to-action run --mock` (bundled sample inbox).
 
 📖 **Full documentation → [docs/](docs/README.md)** — [install](docs/01-install.md) · [providers](docs/02-providers.md) · [Gmail OAuth](docs/03-gmail-oauth.md) · [multi-account](docs/04-multi-account.md) · [integrations](docs/05-integrations.md) · [MCP & Skill](docs/06-mcp-and-skill.md) · [config](docs/07-config-and-triage.md) · [troubleshooting](docs/08-troubleshooting.md) · [testing checklist](docs/09-testing-checklist.md). Quick version: [SETUP.md](SETUP.md).
 
+<p align="center">
+  <img src="docs/demo.gif" alt="inbox-to-action — one command triages the inbox into a report, drafts, and tasks" width="820">
+</p>
+
 ---
 
 ## Why this exists
