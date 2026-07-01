@@ -1,0 +1,24 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
+  "name": "io.github.tarunlnmiit/inbox-to-action",
+  "description": "One-pass agentic inbox triage: classify, summarize, extract tasks, draft replies (never sends), flag calendar. MCP server exposes IO-only tools; the host is the LLM.",
+  "version": "0.2.0",
+  "repository": {
+    "url": "https://github.com/tarunlnmiit/inbox-to-action",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "inbox-to-action",
+      "version": "0.2.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "runtimeHint": "python",
+      "packageArguments": [
+        { "type": "positional", "value": "mcp" }
+      ]
+    }
+  ]
+}
