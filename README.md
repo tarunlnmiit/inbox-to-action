@@ -123,6 +123,24 @@ inbox-to-action run --since 3d --max 40 --todoist
 - Automated **no-reply** senders (security alerts, notifications) never get a drafted
   reply — the report notes them instead.
 
+### Telegram summary (`--telegram`)
+
+Push a concise summary to your phone after each run — counts, action-needed subjects
+(with draft-ready status), extracted tasks, and a link to your Gmail Drafts.
+
+```bash
+# 1. In Telegram, message @BotFather → /newbot → copy the bot token.
+# 2. Message your new bot once (say "hi"), then open:
+#    https://api.telegram.org/bot<token>/getUpdates  → copy "chat":{"id": ...}.
+# 3. Put both in .env:
+#    TELEGRAM_BOT_TOKEN=...   TELEGRAM_CHAT_ID=...
+inbox-to-action run --since 24h --telegram
+```
+
+Off by default (opt-in flag). A send failure never breaks the run.
+**Privacy:** this sends email subjects + extracted tasks to Telegram's servers (into
+your own chat). It's notification only — it never sends email.
+
 ### Multiple accounts (Gmail, Google Workspace, Outlook)
 
 Declare accounts in `config.json` — one merged report, each email tagged with its

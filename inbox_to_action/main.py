@@ -25,7 +25,7 @@ from inbox_to_action import report
 from inbox_to_action.config import load_settings
 from inbox_to_action.mailboxes import build_accounts
 from inbox_to_action.reasoner import get_reasoner
-from inbox_to_action.tools import gmail
+from inbox_to_action.tools import gmail, notify
 
 app = typer.Typer(
     add_completion=False,
@@ -42,6 +42,10 @@ def run(
     ),
     todoist: bool = typer.Option(
         False, "--todoist", help="Also push tasks to Todoist (needs TODOIST_API_TOKEN)."
+    ),
+    telegram: bool = typer.Option(
+        False, "--telegram", help="Push a summary to Telegram "
+        "(needs TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID)."
     ),
     max_emails: int = typer.Option(
         25, "--max", help="Max emails to fetch per account (caps cost/volume)."
@@ -129,6 +133,20 @@ def run(
         raise typer.Exit(1)
 
     report.write_report(results, report_path)
+
+    if telegram:
+        try:
+            sent = notify.send_telegram(results, no_drafts=no_drafts)
+            if sent:
+                typer.secho("Telegram summary sent.", fg=typer.colors.BLUE)
+            else:
+                typer.secho(
+                    "Telegram not configured (set TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID).",
+                    fg=typer.colors.YELLOW,
+                )
+        except Exception as e:  # noqa: BLE001 - a notification must never fail the run
+            typer.secho(f"Telegram send failed (ignored): {e}", fg=typer.colors.YELLOW)
+
     counts = agent.category_counts(results)
     typer.secho(
         f"Done → {report_path}  ("
