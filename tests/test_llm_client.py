@@ -57,6 +57,20 @@ def test_complete_openai_compat_text(monkeypatch):
 
 
 @respx.mock
+def test_complete_openai_compat_no_choices_raises(monkeypatch):
+    # Rate-limited upstream sometimes returns HTTP 200 with an error body (no "choices")
+    monkeypatch.setenv("PROVIDER", "openrouter")
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+    respx.post("https://openrouter.ai/api/v1/chat/completions").mock(
+        return_value=httpx.Response(
+            200, json={"error": {"message": "rate-limited upstream", "code": 429}}
+        )
+    )
+    with pytest.raises(llm_client.LLMError, match="no choices"):
+        llm_client.complete([{"role": "user", "content": "hi"}])
+
+
+@respx.mock
 def test_complete_openai_compat_json_schema(monkeypatch):
     monkeypatch.setenv("PROVIDER", "openrouter")
     monkeypatch.setenv("OPENROUTER_API_KEY", "k")

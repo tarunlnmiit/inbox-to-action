@@ -10,7 +10,6 @@ demonstrating the function-calling surface.
 from __future__ import annotations
 
 from pathlib import Path
-
 from typing import Optional
 
 from inbox_to_action.config import Settings
