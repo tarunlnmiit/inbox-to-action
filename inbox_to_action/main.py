@@ -43,6 +43,12 @@ def run(
     todoist: bool = typer.Option(
         False, "--todoist", help="Also push tasks to Todoist (needs TODOIST_API_TOKEN)."
     ),
+    max_emails: int = typer.Option(
+        25, "--max", help="Max emails to fetch per account (caps cost/volume)."
+    ),
+    no_drafts: bool = typer.Option(
+        False, "--no-drafts", help="Preview only: classify + report, create NO Gmail drafts."
+    ),
     report_path: str = typer.Option("triage-report.md", help="Report output path."),
     tasks_path: str = typer.Option("tasks.md", help="Tasks output path."),
     config: str = typer.Option(
@@ -85,7 +91,7 @@ def run(
             emails = []
             for acc in accounts:
                 try:
-                    got = acc.fetch_emails(since=since)
+                    got = acc.fetch_emails(since=since, max_results=max_emails)
                     typer.secho(f"  {acc.label}: {len(got)} unread", fg=typer.colors.CYAN)
                     emails.extend(got)
                 except Exception as e:  # noqa: BLE001 - one bad account shouldn't stop the rest
@@ -104,11 +110,13 @@ def run(
         tag = f"[{email.account}] " if email.account else ""
         typer.echo(f"  [{i}/{total}] {tag}{email.subject[:56]}")
 
-    typer.secho(f"Triaging {len(emails)} emails via {provider}…", fg=typer.colors.CYAN)
+    mode = " (preview — no drafts)" if no_drafts else ""
+    typer.secho(f"Triaging {len(emails)} emails via {provider}{mode}…", fg=typer.colors.CYAN)
     try:
         results = agent.run_agent(
             emails,
             reasoner,
+            no_drafts=no_drafts,
             todoist=todoist,
             tasks_path=tasks_path,
             on_progress=progress,

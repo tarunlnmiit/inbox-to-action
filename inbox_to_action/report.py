@@ -67,6 +67,9 @@ def _render_item(r: TriageResult) -> list[str]:
         )
         out.append(status)
         out.append("")
+    elif r.draft_note:
+        out.append(f"_No draft — {r.draft_note}._")
+        out.append("")
     if r.tasks:
         out.append("**Tasks:**")
         out.extend(t.to_markdown() for t in r.tasks)

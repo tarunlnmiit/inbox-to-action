@@ -14,6 +14,28 @@ def test_scopes_exclude_send():
     assert "gmail.compose" in joined
 
 
+def test_is_noreply_detects_automated_senders():
+    for s in [
+        "no-reply@accounts.google.com",
+        "Google <noreply@google.com>",
+        "notifications@github.com",
+        "security-alert@amazon.com",
+        "donotreply@bank.com",
+        "mailer-daemon@mail.example.com",
+    ]:
+        assert gmail.is_noreply(s), s
+
+
+def test_is_noreply_allows_real_people():
+    for s in [
+        "Maria Chen <maria@company.com>",
+        "recruiter@hirist.tech",
+        "jobs@stepstone.de",  # a repliable alias, not no-reply
+        "",
+    ]:
+        assert not gmail.is_noreply(s), s
+
+
 def test_source_never_calls_send():
     """No Gmail send API call exists anywhere in the module."""
     src = Path(gmail.__file__).read_text()

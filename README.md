@@ -112,9 +112,16 @@ rate-limited; the client auto-rotates a fallback list and retries with backoff.
 # 1. Create OAuth credentials in Google Cloud Console (Desktop app),
 #    download client_secret.json into the project, then:
 inbox-to-action auth                 # one-time consent (read + compose only)
-inbox-to-action run --since 24h      # triage the last day
-inbox-to-action run --since 3d --todoist
+inbox-to-action run --since 24h --no-drafts   # safe first pass: report only, no writes
+inbox-to-action run --since 24h      # triage the last day (creates Gmail drafts)
+inbox-to-action run --since 3d --max 40 --todoist
 ```
+
+- `--no-drafts` — classify, summarize, extract tasks, write the report, but create
+  **no** Gmail drafts. Recommended for a first run.
+- `--max N` — cap emails per account (default 25) to bound cost/volume.
+- Automated **no-reply** senders (security alerts, notifications) never get a drafted
+  reply — the report notes them instead.
 
 ### Multiple accounts (Gmail, Google Workspace, Outlook)
 
