@@ -16,7 +16,7 @@ For each shot: capture the screen, drop it in `docs/_raw/<filename>`, and note w
 | `03-create-client.png` | Create OAuth client (Desktop app) + download dialog | Client ID + Client secret |
 | `05-botfather.png` | @BotFather chat after `/newbot` | the bot token |
 | ~~`05-chatid.png`~~ | — | — | _dropped: shown as a JSON code block in the guide instead_ |
-| `06-mcp-connected.png` | `claude mcp list` output | (usually none) | _still needed_ |
+| ~~`06-mcp-connected.png`~~ | — | — | _dropped: shown as a code block in the guide instead_ |
 
 ## Blur workflow (maintainer)
 
