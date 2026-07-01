@@ -5,6 +5,12 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/tarunlnmiit/inbox-to-action?style=social)](https://github.com/tarunlnmiit/inbox-to-action)
 [![inbox-to-action MCP server](https://glama.ai/mcp/servers/tarunlnmiit/inbox-to-action/badges/score.svg)](https://glama.ai/mcp/servers/tarunlnmiit/inbox-to-action)
+[![smithery](https://smithery.ai/badge/@tarunlnmiit/inbox-to-action)](https://smithery.ai/server/@tarunlnmiit/inbox-to-action)
+
+Distributed on [PyPI](https://pypi.org/project/inbox-to-action/), the
+[Glama](https://glama.ai/mcp/servers/tarunlnmiit/inbox-to-action) &
+[Smithery](https://smithery.ai/server/@tarunlnmiit/inbox-to-action) MCP registries,
+and the [Official MCP Registry](https://registry.modelcontextprotocol.io) (`server.json`).
 
 > One command. Your inbox triaged, summarized, drafted, and turned into tasks — in a single agentic pass.
 

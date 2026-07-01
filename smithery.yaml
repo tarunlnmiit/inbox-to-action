@@ -1,0 +1,37 @@
+# Smithery deployment config — https://smithery.ai/docs
+# Runs the inbox-to-action MCP server over stdio. The host (Claude Code) is the LLM,
+# so no provider key is required for the MCP tools; all env below is optional.
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    properties:
+      PROVIDER:
+        type: string
+        description: "LLM backend for CLI mode (claude|ollama|openrouter|nim|openai|anthropic|host). Not needed for MCP tools."
+        default: "host"
+      OPENROUTER_API_KEY:
+        type: string
+        description: "OpenRouter API key (optional)."
+      NIM_API_KEY:
+        type: string
+        description: "NVIDIA NIM API key (optional; NVIDIA_API_KEY also accepted)."
+      OPENAI_API_KEY:
+        type: string
+        description: "OpenAI API key (optional)."
+      ANTHROPIC_API_KEY:
+        type: string
+        description: "Anthropic API key (optional)."
+      TELEGRAM_BOT_TOKEN:
+        type: string
+        description: "Telegram bot token for run summaries (optional)."
+      TELEGRAM_CHAT_ID:
+        type: string
+        description: "Telegram chat id for run summaries (optional)."
+    additionalProperties: true
+  commandFunction: |-
+    (config) => ({
+      command: 'python',
+      args: ['-m', 'inbox_to_action.mcp_server'],
+      env: config
+    })

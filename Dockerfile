@@ -12,6 +12,9 @@ WORKDIR /app
 COPY pyproject.toml README.md ./
 COPY inbox_to_action ./inbox_to_action
 
+# Example config read from the working dir at runtime (real config.json is mounted).
+COPY config.example.json ./
+
 # Install the package with the MCP extra.
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir ".[mcp]"
