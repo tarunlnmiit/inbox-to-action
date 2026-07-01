@@ -24,7 +24,8 @@ docker run --rm ghcr.io/tarunlnmiit/inbox-to-action   # MCP server (stdio)
 ```
 
 Try it with zero setup: `inbox-to-action run --mock` (bundled sample inbox).
-See [SETUP.md](SETUP.md) for the full guide.
+
+📖 **Full documentation → [docs/](docs/README.md)** — [install](docs/01-install.md) · [providers](docs/02-providers.md) · [Gmail OAuth](docs/03-gmail-oauth.md) · [multi-account](docs/04-multi-account.md) · [integrations](docs/05-integrations.md) · [MCP & Skill](docs/06-mcp-and-skill.md) · [config](docs/07-config-and-triage.md) · [troubleshooting](docs/08-troubleshooting.md) · [testing checklist](docs/09-testing-checklist.md). Quick version: [SETUP.md](SETUP.md).
 
 <!-- DEMO REEL -->
 <p align="center">
@@ -262,7 +263,8 @@ pytest --cov=.        # 100+ tests, 90%+ coverage, incl. the never-send security
 
 ## Docs
 
-- [SETUP.md](SETUP.md) — full step-by-step (providers, Gmail OAuth, multi-account, Telegram, MCP, cron).
+- **[docs/](docs/README.md)** — full guides with screenshots: install, every LLM provider, Gmail OAuth, multi-account, integrations, MCP & Skill, config, troubleshooting, testing checklist.
+- [SETUP.md](SETUP.md) — 5-minute quickstart.
 - [CONTRIBUTING.md](CONTRIBUTING.md) — dev setup + the never-send rule.
 - [CLAUDE.md](CLAUDE.md) — project map for Claude Code.
 

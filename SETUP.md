@@ -1,7 +1,11 @@
-# Setup Guide
+# Setup Guide (quickstart)
 
 Get `inbox-to-action` triaging your inbox in a few minutes. Every step below is
 optional except 1–3. **The tool never sends email — it only reads and saves drafts.**
+
+> 📖 For the **full guides with screenshots** — per-provider setup, the detailed Google
+> OAuth walkthrough, multi-account, integrations, MCP, troubleshooting, and a testing
+> checklist — see **[docs/](docs/README.md)**.
 
 ---
 
