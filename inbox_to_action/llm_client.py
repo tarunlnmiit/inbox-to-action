@@ -33,7 +33,8 @@ _OPENAI_COMPAT = {
     "nim": {
         "base_url": "https://integrate.api.nvidia.com/v1",
         "key_env": "NIM_API_KEY",
-        "default_model": "meta/llama-3.1-8b-instruct",
+        "alt_key_env": "NVIDIA_API_KEY",  # accept the conventional NVIDIA name too
+        "default_model": "meta/llama-3.3-70b-instruct",
     },
     "ollama": {
         "base_url": os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434/v1"),
@@ -56,6 +57,9 @@ _OPENROUTER_FREE_FALLBACKS = [
 _RETRY_STATUS = {429, 502, 503}
 _MAX_RETRIES = 4
 _RETRY_BASE_SECONDS = 3.0
+# Per-request HTTP timeout (seconds). Big models on long threads can be slow;
+# generous by default, overridable via env.
+_HTTP_TIMEOUT = float(os.environ.get("INBOX_TO_ACTION_HTTP_TIMEOUT", "150"))
 
 # Keyless provider backed by the local `claude` CLI (Claude Code). Uses the
 # user's existing login — no API key. Great for fast iteration.
@@ -69,6 +73,16 @@ class LLMError(RuntimeError):
 
 def active_provider() -> str:
     return os.environ.get("PROVIDER", "openrouter").strip().lower()
+
+
+def _resolve_key(cfg: dict) -> str:
+    """Return the API key for an OpenAI-compat provider, honoring an alt env name."""
+    for env_name in (cfg.get("key_env"), cfg.get("alt_key_env")):
+        if env_name:
+            val = os.environ.get(env_name, "").strip()
+            if val:
+                return val
+    return ""
 
 
 def _model(provider: str) -> str:
@@ -92,10 +106,10 @@ def validate_config(provider: Optional[str] = None) -> None:
     if provider in _OPENAI_COMPAT:
         cfg = _OPENAI_COMPAT[provider]
         key_env = cfg["key_env"]
-        if key_env and not os.environ.get(key_env):
+        if key_env and not _resolve_key(cfg):
+            names = " or ".join(n for n in (key_env, cfg.get("alt_key_env")) if n)
             raise LLMError(
-                f"PROVIDER={provider} requires {key_env} to be set "
-                f"(see .env.example)."
+                f"PROVIDER={provider} requires {names} to be set (see .env.example)."
             )
         return
     if provider == "anthropic":
@@ -157,8 +171,7 @@ def _complete_openai_compat(
     cfg = _OPENAI_COMPAT[provider]
     headers = {"Content-Type": "application/json"}
     if cfg["key_env"]:
-        key = os.environ.get(cfg["key_env"], "")
-        headers["Authorization"] = f"Bearer {key}"
+        headers["Authorization"] = f"Bearer {_resolve_key(cfg)}"
 
     primary = _model(provider)
     payload: dict[str, Any] = {
@@ -188,15 +201,25 @@ def _complete_openai_compat(
 
 
 def _post_with_retry(httpx, url, headers, payload, provider):
-    """POST with backoff on transient 429/5xx. Other errors raise immediately."""
+    """POST with backoff on transient 429/5xx and network timeouts.
+
+    Larger models (e.g. NIM llama-3.3-70b on long threads) can exceed a short
+    read timeout; treat timeouts as retryable rather than failing the whole run.
+    """
     import time
 
     last_exc: Exception | None = None
     for attempt in range(_MAX_RETRIES + 1):
         try:
-            resp = httpx.post(url, headers=headers, json=payload, timeout=60)
+            resp = httpx.post(url, headers=headers, json=payload, timeout=_HTTP_TIMEOUT)
             resp.raise_for_status()
             return resp
+        except httpx.TimeoutException as e:
+            last_exc = e
+            if attempt < _MAX_RETRIES:
+                time.sleep(_RETRY_BASE_SECONDS * (2**attempt))
+                continue
+            raise LLMError(f"{provider} request timed out after retries: {e}") from e
         except httpx.HTTPStatusError as e:
             status = e.response.status_code
             last_exc = e

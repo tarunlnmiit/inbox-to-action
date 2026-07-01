@@ -129,6 +129,38 @@ def test_retry_exhausts_then_raises(monkeypatch):
         llm_client.complete([{"role": "user", "content": "hi"}])
 
 
+def test_nim_accepts_nvidia_api_key_alias(monkeypatch):
+    monkeypatch.setenv("PROVIDER", "nim")
+    monkeypatch.delenv("NIM_API_KEY", raising=False)
+    monkeypatch.setenv("NVIDIA_API_KEY", "nvapi-xyz")
+    llm_client.validate_config()  # must not raise
+    cfg = llm_client._OPENAI_COMPAT["nim"]
+    assert llm_client._resolve_key(cfg) == "nvapi-xyz"
+
+
+def test_nim_missing_key_message_mentions_both(monkeypatch):
+    monkeypatch.setenv("PROVIDER", "nim")
+    monkeypatch.delenv("NIM_API_KEY", raising=False)
+    monkeypatch.delenv("NVIDIA_API_KEY", raising=False)
+    with pytest.raises(llm_client.LLMError) as ei:
+        llm_client.validate_config()
+    assert "NIM_API_KEY" in str(ei.value) and "NVIDIA_API_KEY" in str(ei.value)
+
+
+@respx.mock
+def test_retry_on_timeout_then_success(monkeypatch):
+    monkeypatch.setenv("PROVIDER", "openrouter")
+    monkeypatch.setenv("OPENROUTER_API_KEY", "k")
+    monkeypatch.setattr("time.sleep", lambda *_: None)
+    respx.post("https://openrouter.ai/api/v1/chat/completions").mock(
+        side_effect=[
+            httpx.ReadTimeout("slow"),
+            httpx.Response(200, json={"choices": [{"message": {"content": "ok"}}]}),
+        ]
+    )
+    assert llm_client.complete([{"role": "user", "content": "hi"}]) == "ok"
+
+
 def test_retry_delay_honors_retry_after():
     resp = httpx.Response(429, headers={"retry-after": "7"})
     assert llm_client._retry_delay(resp, 0) == 7.0
