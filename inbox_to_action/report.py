@@ -49,7 +49,8 @@ def _summary_line(results: list[TriageResult]) -> str:
 
 
 def _render_item(r: TriageResult) -> list[str]:
-    out = [f"### {r.email.subject}", f"*from {r.email.sender}*", ""]
+    acct = f" · `{r.email.account}`" if r.email.account else ""
+    out = [f"### {r.email.subject}", f"*from {r.email.sender}{acct}*", ""]
     if r.summary:
         out.append(f"> {r.summary}")
         out.append("")

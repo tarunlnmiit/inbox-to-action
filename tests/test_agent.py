@@ -28,6 +28,27 @@ def test_triage_action_needed_full_trajectory(sample_email):
     assert result.calendar_reason == "schedule a call"
 
 
+def test_triage_routes_draft_to_account(sample_email):
+    """When an accounts map is given, the draft is saved via the email's account."""
+    sample_email.account = "personal"
+    calls = {}
+
+    class FakeAccount:
+        def save_draft(self, email, body, *, mock=False):
+            calls["email_id"] = email.id
+            calls["mock"] = mock
+            return "acct-draft-1"
+
+    result = agent.triage_email(
+        sample_email,
+        FakeReasoner(_router),
+        save_drafts=True,
+        accounts={"personal": FakeAccount()},
+    )
+    assert result.draft_id == "acct-draft-1"
+    assert calls["email_id"] == sample_email.id
+
+
 def test_triage_fyi_skips_action_tools(sample_email):
     r = FakeReasoner(lambda m, s: {"category": "fyi"} if s and "category" in s.get("properties", {}) else None)
     result = agent.triage_email(sample_email, r)

@@ -26,6 +26,7 @@ class Email:
     body: str
     thread_id: str = ""
     received: str = ""  # ISO timestamp
+    account: str = ""  # id/label of the mailbox account this came from
 
     def word_count(self) -> int:
         return len(self.body.split())
@@ -39,6 +40,7 @@ class Email:
             body=d.get("body", ""),
             thread_id=d.get("thread_id", str(d["id"])),
             received=d.get("received", ""),
+            account=d.get("account", ""),
         )
 
 

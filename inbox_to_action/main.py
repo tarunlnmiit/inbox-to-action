@@ -23,6 +23,7 @@ from inbox_to_action import agent
 from inbox_to_action import llm_client
 from inbox_to_action import report
 from inbox_to_action.config import load_settings
+from inbox_to_action.mailboxes import build_accounts
 from inbox_to_action.reasoner import get_reasoner
 from inbox_to_action.tools import gmail
 
@@ -64,18 +65,6 @@ def run(
         typer.secho(str(e), fg=typer.colors.RED)
         raise typer.Exit(1)
 
-    typer.secho(f"Fetching emails (since {since}, mock={mock})…", fg=typer.colors.CYAN)
-    try:
-        emails = gmail.fetch_emails(since=since, mock=mock)
-    except Exception as e:  # noqa: BLE001 - surface any fetch error cleanly
-        typer.secho(f"Fetch failed: {e}", fg=typer.colors.RED)
-        raise typer.Exit(1)
-
-    if not emails:
-        typer.secho("No emails to triage.", fg=typer.colors.YELLOW)
-        raise typer.Exit(0)
-
-    reasoner = get_reasoner(provider)
     settings = load_settings(config)
     if settings.rules or settings.triage_instructions:
         bits = []
@@ -85,8 +74,35 @@ def run(
             bits.append("custom instructions")
         typer.secho(f"Triage config: {', '.join(bits)}.", fg=typer.colors.BLUE)
 
+    accounts_map = None
+    typer.secho(f"Fetching emails (since {since}, mock={mock})…", fg=typer.colors.CYAN)
+    try:
+        if mock:
+            emails = gmail.fetch_emails(mock=True)  # single synthetic inbox
+        else:
+            accounts = build_accounts(settings)
+            accounts_map = {a.id: a for a in accounts}
+            emails = []
+            for acc in accounts:
+                try:
+                    got = acc.fetch_emails(since=since)
+                    typer.secho(f"  {acc.label}: {len(got)} unread", fg=typer.colors.CYAN)
+                    emails.extend(got)
+                except Exception as e:  # noqa: BLE001 - one bad account shouldn't stop the rest
+                    typer.secho(f"  {acc.label}: fetch failed ({e})", fg=typer.colors.YELLOW)
+    except Exception as e:  # noqa: BLE001 - surface any fetch error cleanly
+        typer.secho(f"Fetch failed: {e}", fg=typer.colors.RED)
+        raise typer.Exit(1)
+
+    if not emails:
+        typer.secho("No emails to triage.", fg=typer.colors.YELLOW)
+        raise typer.Exit(0)
+
+    reasoner = get_reasoner(provider)
+
     def progress(i: int, total: int, email):
-        typer.echo(f"  [{i}/{total}] {email.subject[:60]}")
+        tag = f"[{email.account}] " if email.account else ""
+        typer.echo(f"  [{i}/{total}] {tag}{email.subject[:56]}")
 
     typer.secho(f"Triaging {len(emails)} emails via {provider}…", fg=typer.colors.CYAN)
     try:
@@ -98,6 +114,7 @@ def run(
             on_progress=progress,
             mock=mock,
             settings=settings,
+            accounts=accounts_map,
         )
     except llm_client.LLMError as e:
         typer.secho(str(e), fg=typer.colors.RED)
@@ -117,15 +134,36 @@ def run(
 def auth(
     client_secrets: str = typer.Option(
         None, help="Path to Google OAuth client secrets JSON."
-    )
+    ),
+    account: str = typer.Option(
+        None, "--account", help="Authorize a specific configured account by id."
+    ),
+    config: str = typer.Option(None, "--config", help="Triage config JSON path."),
 ):
-    """Run the Gmail OAuth consent flow (read + compose scopes only)."""
-    try:
-        gmail.get_credentials(client_secrets)
-    except Exception as e:  # noqa: BLE001
-        typer.secho(f"Auth failed: {e}", fg=typer.colors.RED)
-        raise typer.Exit(1)
-    typer.secho("Gmail authorized (read + compose). Drafts only — never sends.", fg=typer.colors.GREEN)
+    """Authorize a mailbox (Gmail read+compose, or Outlook Mail.Read+ReadWrite). Never sends."""
+    settings = load_settings(config)
+    accounts = build_accounts(settings)
+
+    if account:
+        target = next((a for a in accounts if a.id == account), None)
+        if target is None:
+            ids = ", ".join(a.id for a in accounts) or "(none configured)"
+            typer.secho(f"No account '{account}'. Configured: {ids}", fg=typer.colors.RED)
+            raise typer.Exit(1)
+        targets = [target]
+    else:
+        targets = accounts
+
+    for acc in targets:
+        typer.secho(f"Authorizing {acc.label} ({acc.kind})…", fg=typer.colors.CYAN)
+        try:
+            if acc.kind == "gmail" and client_secrets:
+                acc._client_secret = client_secrets  # honor explicit override
+            acc.authorize()
+        except Exception as e:  # noqa: BLE001
+            typer.secho(f"Auth failed for {acc.label}: {e}", fg=typer.colors.RED)
+            raise typer.Exit(1)
+    typer.secho("Authorized (read + draft scopes only). Drafts only — never sends.", fg=typer.colors.GREEN)
 
 
 @app.command()

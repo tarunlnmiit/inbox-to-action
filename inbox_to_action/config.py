@@ -35,6 +35,7 @@ class Rule:
 class Settings:
     triage_instructions: str = ""
     rules: tuple[Rule, ...] = field(default_factory=tuple)
+    accounts: tuple = field(default_factory=tuple)  # tuple[AccountConfig, ...]
 
 
 def _coerce_rules(raw) -> tuple[Rule, ...]:
@@ -67,8 +68,11 @@ def _config_path(path: str | os.PathLike | None) -> Path | None:
 
 def load_settings(path: str | os.PathLike | None = None) -> Settings:
     """Load triage settings from config file + env overrides (never raises)."""
+    from inbox_to_action.mailboxes.base import _coerce_accounts
+
     instructions = ""
     rules: tuple[Rule, ...] = ()
+    accounts: tuple = ()
 
     cfg_path = _config_path(path)
     if cfg_path and cfg_path.exists():
@@ -77,6 +81,7 @@ def load_settings(path: str | os.PathLike | None = None) -> Settings:
             if isinstance(data, dict):
                 instructions = str(data.get("triage_instructions", "") or "")
                 rules = _coerce_rules(data.get("rules", []))
+                accounts = _coerce_accounts(data.get("accounts", []))
         except (json.JSONDecodeError, OSError):
             # Bad config shouldn't break triage — fall back to defaults.
             pass
@@ -85,7 +90,9 @@ def load_settings(path: str | os.PathLike | None = None) -> Settings:
     if env_instructions:
         instructions = env_instructions
 
-    return Settings(triage_instructions=instructions.strip(), rules=rules)
+    return Settings(
+        triage_instructions=instructions.strip(), rules=rules, accounts=accounts
+    )
 
 
 def match_rule(sender: str, subject: str, body: str, rules: tuple[Rule, ...]) -> str | None:

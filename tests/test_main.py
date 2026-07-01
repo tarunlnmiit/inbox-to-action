@@ -70,13 +70,32 @@ def test_run_no_emails(monkeypatch):
 
 
 def test_run_fetch_failure(monkeypatch):
+    """A failure building accounts surfaces as a fatal Fetch error."""
     monkeypatch.setenv("PROVIDER", "openrouter")
     monkeypatch.setenv("OPENROUTER_API_KEY", "k")
 
-    def boom(**kw):
-        raise RuntimeError("gmail down")
+    def boom(_settings):
+        raise RuntimeError("accounts down")
 
-    monkeypatch.setattr(main.gmail, "fetch_emails", boom)
+    monkeypatch.setattr(main, "build_accounts", boom)
     result = runner.invoke(main.app, ["run"])
     assert result.exit_code == 1
     assert "Fetch failed" in result.output
+
+
+def test_run_per_account_fetch_error_is_non_fatal(monkeypatch):
+    """One account failing to fetch is warned, not fatal — others still run."""
+    monkeypatch.setenv("PROVIDER", "openrouter")
+    monkeypatch.setenv("OPENROUTER_API_KEY", "k")
+
+    class BadAccount:
+        id, kind, label = "bad", "gmail", "bad-account"
+
+        def fetch_emails(self, **kw):
+            raise RuntimeError("gmail down")
+
+    monkeypatch.setattr(main, "build_accounts", lambda _s: [BadAccount()])
+    result = runner.invoke(main.app, ["run"])
+    assert result.exit_code == 0
+    assert "fetch failed" in result.output.lower()
+    assert "No emails" in result.output
