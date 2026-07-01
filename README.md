@@ -251,8 +251,14 @@ Quick override without a file: `TRIAGE_INSTRUCTIONS="treat job alerts as action_
 ## Tests
 
 ```bash
-pytest --cov=.        # 50+ tests, 90%+ coverage, incl. the never-send security test
+pytest --cov=.        # 100+ tests, 90%+ coverage, incl. the never-send security test
 ```
+
+## Docs
+
+- [SETUP.md](SETUP.md) — full step-by-step (providers, Gmail OAuth, multi-account, Telegram, MCP, cron).
+- [CONTRIBUTING.md](CONTRIBUTING.md) — dev setup + the never-send rule.
+- [CLAUDE.md](CLAUDE.md) — project map for Claude Code.
 
 ## Built with
 
