@@ -116,6 +116,32 @@ inbox-to-action run --since 24h      # triage the last day
 inbox-to-action run --since 3d --todoist
 ```
 
+### Multiple accounts (Gmail, Google Workspace, Outlook)
+
+Declare accounts in `config.json` — one merged report, each email tagged with its
+account. Personal Gmail and Workspace both use the Gmail path (Workspace may need
+your admin to allow the OAuth app). Outlook uses Microsoft Graph (read + draft only).
+
+```json
+{
+  "accounts": [
+    { "id": "personal", "kind": "gmail",   "label": "Personal Gmail" },
+    { "id": "work",     "kind": "gmail",   "label": "Workspace" },
+    { "id": "outlook",  "kind": "outlook", "label": "Outlook", "client_id": "AZURE_APP_ID" }
+  ]
+}
+```
+
+```bash
+inbox-to-action auth --account personal   # authorize each account once
+inbox-to-action auth --account work
+inbox-to-action run --since 24h           # fetches + triages across all accounts
+```
+
+Multiple personal Gmail accounts can reuse one `client_secret.json` — each gets its
+own cached token (`~/.config/inbox-to-action/tokens/<id>.json`). With no `accounts`
+block, the tool uses a single default Gmail account (backwards compatible).
+
 ## Use inside Claude Code (keyless)
 
 When run inside Claude Code, **Claude Code is the LLM** — no provider key needed.

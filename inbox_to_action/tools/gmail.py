@@ -39,15 +39,20 @@ _REPLY_SYSTEM = (
 
 
 # ── Auth ────────────────────────────────────────────────────────────────────
-def get_credentials(client_secrets: str | None = None):
-    """Load cached creds, refreshing or running the install-app flow as needed."""
+def get_credentials(client_secrets: str | None = None, token_path: Path | None = None):
+    """Load cached creds, refreshing or running the install-app flow as needed.
+
+    `token_path` lets each account cache its own token (multi-account); defaults
+    to the legacy single-account path.
+    """
     from google.auth.transport.requests import Request
     from google.oauth2.credentials import Credentials
     from google_auth_oauthlib.flow import InstalledAppFlow
 
+    token_path = Path(token_path) if token_path else _TOKEN_PATH
     creds = None
-    if _TOKEN_PATH.exists():
-        creds = Credentials.from_authorized_user_file(str(_TOKEN_PATH), SCOPES)
+    if token_path.exists():
+        creds = Credentials.from_authorized_user_file(str(token_path), SCOPES)
     if creds and creds.valid:
         return creds
     if creds and creds.expired and creds.refresh_token:
@@ -58,18 +63,22 @@ def get_credentials(client_secrets: str | None = None):
         )
         flow = InstalledAppFlow.from_client_secrets_file(secrets, SCOPES)
         creds = flow.run_local_server(port=0)
-    _TOKEN_PATH.parent.mkdir(parents=True, exist_ok=True)
-    _TOKEN_PATH.write_text(creds.to_json(), encoding="utf-8")
+    token_path.parent.mkdir(parents=True, exist_ok=True)
+    token_path.write_text(creds.to_json(), encoding="utf-8")
     return creds
 
 
-def _service(service=None):
+def _service(service=None, *, token_path: Path | None = None, client_secrets: str | None = None):
     """Build the Gmail API client (or return an injected one for tests)."""
     if service is not None:
         return service
     from googleapiclient.discovery import build
 
-    return build("gmail", "v1", credentials=get_credentials())
+    return build(
+        "gmail",
+        "v1",
+        credentials=get_credentials(client_secrets=client_secrets, token_path=token_path),
+    )
 
 
 # ── Fetch ───────────────────────────────────────────────────────────────────
