@@ -19,9 +19,7 @@ try:  # Load .env so PROVIDER / API keys work as documented (optional dep).
 except ImportError:  # pragma: no cover - dotenv is a listed dependency
     pass
 
-from inbox_to_action import agent
-from inbox_to_action import llm_client
-from inbox_to_action import report
+from inbox_to_action import agent, llm_client, report
 from inbox_to_action.config import load_settings
 from inbox_to_action.mailboxes import build_accounts
 from inbox_to_action.reasoner import get_reasoner

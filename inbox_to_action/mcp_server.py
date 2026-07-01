@@ -19,8 +19,9 @@ from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
 
-from inbox_to_action.tools import gmail, tasks as tasks_tool
 from inbox_to_action.models import Task
+from inbox_to_action.tools import gmail
+from inbox_to_action.tools import tasks as tasks_tool
 
 mcp = FastMCP("inbox-to-action")
 

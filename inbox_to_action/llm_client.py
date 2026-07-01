@@ -194,7 +194,11 @@ def _complete_openai_compat(
     resp = _post_with_retry(httpx, url, headers, payload, provider)
 
     data = resp.json()
-    text = data["choices"][0]["message"]["content"]
+    choices = data.get("choices")
+    if not choices:
+        err = data.get("error") or data
+        raise LLMError(f"{provider} returned no choices: {str(err)[:200]}")
+    text = choices[0]["message"]["content"]
     if json_schema is not None:
         return _parse_json(text)
     return text
