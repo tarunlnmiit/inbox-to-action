@@ -25,10 +25,14 @@ claude mcp add inbox-to-action -- python -m inbox_to_action.mcp_server
 Verify:
 
 ```bash
-claude mcp list        # inbox-to-action … ✔ Connected
+claude mcp list
 ```
 
-> 📷 _Screenshot: `images/06-mcp-connected.png` — `claude mcp list` showing inbox-to-action **Connected**._
+Expected output:
+
+```text
+inbox-to-action: /path/to/python -m inbox_to_action.mcp_server - ✔ Connected
+```
 
 Then, in a Claude Code session, ask it to triage your inbox — it will call `fetch_emails`, reason, then `save_gmail_draft` / `append_tasks` / `write_report`. Start with `fetch_emails(mock=true)` to try it with zero Gmail setup.
 
