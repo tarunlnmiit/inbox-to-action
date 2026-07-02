@@ -190,9 +190,15 @@ def test_parse_json_with_fences():
     assert llm_client._parse_json('```json\n{"a": 1}\n```') == {"a": 1}
 
 
-def test_parse_json_invalid():
-    with pytest.raises(llm_client.LLMError):
-        llm_client._parse_json("not json")
+def test_parse_json_salvages_embedded_object():
+    assert llm_client._parse_json('sure: {"a": 1} done') == {"a": 1}
+    assert llm_client._parse_json('[{"t": 1}] extra') == [{"t": 1}]
+
+
+def test_parse_json_degrades_to_raw_string():
+    # Weak providers may emit a bare token; don't crash — return it for coercion.
+    assert llm_client._parse_json("noise") == "noise"
+    assert llm_client._parse_json("not json") == "not json"
 
 
 def test_complete_anthropic_keyless(monkeypatch):

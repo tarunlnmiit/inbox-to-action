@@ -8,6 +8,16 @@ def test_classify_returns_category(sample_email):
     assert classifier.classify_email(sample_email, r) == "action_needed"
 
 
+def test_classify_accepts_bare_string(sample_email):
+    # Weak provider (e.g. claude CLI ignoring --json-schema) returns a bare word.
+    assert classifier.classify_email(sample_email, FakeReasoner(lambda m, s: "noise")) == "noise"
+    assert classifier.classify_email(sample_email, FakeReasoner(lambda m, s: '"fyi"\n')) == "fyi"
+
+
+def test_classify_unrecognized_defaults_fyi(sample_email):
+    assert classifier.classify_email(sample_email, FakeReasoner(lambda m, s: "banana")) == "fyi"
+
+
 def test_rule_short_circuits_llm(sample_email):
     """A matching rule returns its category WITHOUT calling the reasoner."""
     settings = Settings(

@@ -54,5 +54,16 @@ def classify_email(
         json_schema=_SCHEMA,
         max_tokens=64,
     )
-    category = result.get("category", "fyi") if isinstance(result, dict) else "fyi"
-    return category if category in CATEGORIES else "fyi"
+    # Strong providers return {"category": ...}; weak ones (e.g. a claude CLI
+    # that ignores --json-schema) may reply with a bare word like `noise` or a
+    # short sentence. Accept both, default to fyi on anything unrecognized.
+    if isinstance(result, dict):
+        raw = str(result.get("category", "") or "")
+    elif isinstance(result, str):
+        raw = result
+    else:
+        raw = ""
+    raw = raw.strip().strip("\"'").lower()
+    if raw in CATEGORIES:
+        return raw
+    return next((c for c in CATEGORIES if c in raw), "fyi")
