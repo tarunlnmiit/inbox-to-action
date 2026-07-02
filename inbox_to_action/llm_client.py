@@ -378,8 +378,14 @@ def _extract_claude_result(stdout: str) -> str:
     raise LLMError("claude CLI output had no result element")
 
 
-def _parse_json(text: str) -> dict:
-    """Parse JSON, tolerating ```json fences some models emit."""
+def _parse_json(text: str) -> Any:
+    """Parse a model's JSON reply, tolerating weak/non-strict providers.
+
+    Order: strip ```json fences → strict parse → salvage a JSON object/array
+    embedded in prose → return the raw string. Never raises: a single
+    unparseable reply degrades that one field (callers coerce/default) instead
+    of crashing the whole run. Providers that honor the schema are unaffected.
+    """
     s = text.strip()
     if s.startswith("```"):
         s = s.split("```", 2)[1]
@@ -388,5 +394,22 @@ def _parse_json(text: str) -> dict:
         s = s.strip()
     try:
         return json.loads(s)
-    except json.JSONDecodeError as e:
-        raise LLMError(f"Model did not return valid JSON: {text[:200]!r}") from e
+    except json.JSONDecodeError:
+        pass
+    salvaged = _salvage_json(s)
+    return salvaged if salvaged is not None else s
+
+
+def _salvage_json(s: str) -> Any:
+    """Extract the first JSON object/array embedded in surrounding prose."""
+    candidates = []
+    for open_ch, close_ch in (("{", "}"), ("[", "]")):
+        start, end = s.find(open_ch), s.rfind(close_ch)
+        if 0 <= start < end:
+            candidates.append((start, s[start : end + 1]))
+    for _, fragment in sorted(candidates):  # earliest opener wins
+        try:
+            return json.loads(fragment)
+        except json.JSONDecodeError:
+            continue
+    return None
