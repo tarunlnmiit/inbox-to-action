@@ -1,5 +1,7 @@
 # inbox-to-action
 
+<!-- mcp-name: io.github.tarunlnmiit/inbox-to-action -->
+
 [![PyPI version](https://img.shields.io/pypi/v/inbox-to-action)](https://pypi.org/project/inbox-to-action/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
