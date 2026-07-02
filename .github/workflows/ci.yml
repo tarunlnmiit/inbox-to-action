@@ -31,11 +31,16 @@ jobs:
         run: pytest --cov=. --cov-report=term-missing
 
   # Publish to PyPI on a version tag (e.g. v0.2.0), after tests pass.
-  # Uses OIDC Trusted Publishing — no API token stored. One-time setup:
-  # configure the PyPI project's Trusted Publisher (repo tarunlnmiit/inbox-to-action,
-  # workflow ci.yml). See SETUP.md.
+  # OFF by default: this repo publishes via `twine` (project-scoped token in
+  # ~/.pypirc), so a plain tag push just records a GitHub release — it does NOT
+  # auto-publish and never fails CI. To enable OIDC auto-publish on tags instead:
+  #   1. configure the PyPI project's Trusted Publisher (repo
+  #      tarunlnmiit/inbox-to-action, workflow ci.yml) — see SETUP.md, then
+  #   2. set repo variable PYPI_TRUSTED_PUBLISH=true (Settings → Secrets and
+  #      variables → Actions → Variables).
+  # `skip-existing` keeps re-tagging an already-published version a no-op.
   publish:
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') && vars.PYPI_TRUSTED_PUBLISH == 'true'
     needs: test
     runs-on: ubuntu-latest
     permissions:
@@ -48,3 +53,5 @@ jobs:
       - run: pip install hatch
       - run: hatch build
       - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true
