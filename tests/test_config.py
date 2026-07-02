@@ -1,6 +1,5 @@
 import json
 
-from inbox_to_action import config
 from inbox_to_action.config import Rule, Settings, load_settings, match_rule
 
 

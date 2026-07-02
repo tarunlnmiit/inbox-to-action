@@ -1,4 +1,3 @@
-import pytest
 
 from inbox_to_action.config import Settings, load_settings
 from inbox_to_action.mailboxes import build_accounts
@@ -84,7 +83,9 @@ def test_gmail_account_save_draft_delegates(monkeypatch):
     assert captured == {"service": "SVC", "mock": True}
 
 
-def test_outlook_account_not_yet_available():
+def test_outlook_account_builds():
     settings = Settings(accounts=(AccountConfig(id="work", kind="outlook", client_id="x"),))
-    with pytest.raises(NotImplementedError):
-        build_accounts(settings)
+    accounts = build_accounts(settings)
+    assert len(accounts) == 1
+    assert accounts[0].kind == "outlook"
+    assert accounts[0].id == "work"
