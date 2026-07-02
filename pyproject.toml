@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "inbox-to-action"
-version = "0.2.6"
+version = "0.2.7"
 description = "One-pass agentic inbox triage: classify, summarize, extract tasks, draft replies (never sends), flag calendar."
 readme = "README.md"
 license = { text = "MIT" }
