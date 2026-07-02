@@ -88,6 +88,27 @@ def test_complete_openai_compat_json_schema(monkeypatch):
 
 
 @respx.mock
+def test_complete_openai_compat_non_json_degrades(monkeypatch):
+    # Weak OpenAI-compat model ignores response_format and returns a bare token /
+    # prose. Must NOT crash — _parse_json degrades (salvage, else raw string) so
+    # the same graceful path applies to openrouter/nim/openai, not just claude.
+    monkeypatch.setenv("PROVIDER", "openrouter")
+    monkeypatch.setenv("OPENROUTER_API_KEY", "k")
+    schema = {"type": "object", "properties": {"category": {"type": "string"}}}
+    for content, expected in [
+        ("noise", "noise"),  # bare token → raw string (classifier coerces it)
+        ("sure: {\"category\": \"fyi\"}", {"category": "fyi"}),  # salvaged
+    ]:
+        respx.post("https://openrouter.ai/api/v1/chat/completions").mock(
+            return_value=httpx.Response(
+                200, json={"choices": [{"message": {"content": content}}]}
+            )
+        )
+        out = llm_client.complete([{"role": "user", "content": "x"}], json_schema=schema)
+        assert out == expected
+
+
+@respx.mock
 def test_complete_http_error(monkeypatch):
     monkeypatch.setenv("PROVIDER", "openrouter")
     monkeypatch.setenv("OPENROUTER_API_KEY", "k")
