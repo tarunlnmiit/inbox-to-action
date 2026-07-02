@@ -1,5 +1,5 @@
-from inbox_to_action import agent
 from conftest import FakeReasoner
+from inbox_to_action import agent
 from inbox_to_action.models import Email
 
 

@@ -1,6 +1,6 @@
 # 04 · Multiple accounts
 
-Triage several inboxes in **one merged report**, each email tagged with its account. Works for multiple personal Gmail accounts and Google Workspace. (Outlook is planned.)
+Triage several inboxes in **one merged report**, each email tagged with its account. Works for multiple personal Gmail accounts, Google Workspace, and Outlook (personal outlook.com + Microsoft 365).
 
 ## Declare accounts in `config.json`
 
@@ -18,7 +18,7 @@ Fields per account:
 | Field | Meaning |
 |-------|---------|
 | `id` | short unique id (used for the token filename and report tag) |
-| `kind` | `gmail` (Workspace uses `gmail` too) — `outlook` is reserved for later |
+| `kind` | `gmail` (Workspace uses `gmail` too) or `outlook` |
 | `label` | display name in the report |
 | `client_secret` | optional path to that account's OAuth secret (defaults to the shared one) |
 
@@ -44,6 +44,27 @@ The report tags each item with its account, e.g. *`from … · personal`*. Draft
 ## Google Workspace note
 
 A Workspace (company) account uses the same `gmail` path. Your Workspace **admin** may need to allow the OAuth app (app access control) before you can authorize it. Personal Gmail has no such gate.
+
+## Add an Outlook account
+
+Outlook (personal outlook.com/live **and** Microsoft 365) uses your own free Azure app. Scopes requested are **`Mail.Read` + `Mail.ReadWrite` only — never send.**
+
+1. Install the extra: `pip install 'inbox-to-action[outlook]'`.
+2. Go to <https://portal.azure.com> → **Microsoft Entra ID → App registrations → New registration**.
+   - Supported account types: **Accounts in any org directory and personal Microsoft accounts**.
+   - Redirect URI: **Public client/native** → `http://localhost`.
+   - Register → copy the **Application (client) ID**.
+3. **API permissions → Add → Microsoft Graph → Delegated** → add **`Mail.Read`** and **`Mail.ReadWrite`** (do *not* add `Mail.Send`).
+4. Add the account to `config.json`:
+
+   ```json
+   { "id": "outlook", "kind": "outlook", "label": "Outlook",
+     "client_id": "YOUR_APPLICATION_CLIENT_ID", "tenant": "common" }
+   ```
+
+5. Authorize (browser consent, once): `inbox-to-action auth --account outlook`.
+
+Drafts are created via Graph `createReply` — saved to your Outlook **Drafts**, never sent. `tenant` stays `common` for personal + multi-org; use your tenant id to lock to one org.
 
 ## Backwards compatible
 

@@ -31,7 +31,7 @@ inbox_to_action/
   models.py        Email, Task, TriageResult, CATEGORIES
   report.py        triage-report.md renderer
   mcp_server.py    FastMCP: fetch_emails, save_gmail_draft, append_tasks, write_report
-  mailboxes/       MailAccount protocol; gmail.py (works), outlook.py (stub)
+  mailboxes/       MailAccount protocol; gmail.py + outlook.py (Graph, [outlook] extra)
   tools/           classifier, summarizer, tasks (+ Todoist), gmail (+ is_noreply),
                    calendar_flag, notify (Telegram)
   fixtures/        sample_inbox.json (--mock)
