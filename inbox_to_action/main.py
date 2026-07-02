@@ -12,18 +12,30 @@ import sys
 
 import typer
 
-try:  # Load .env so PROVIDER / API keys work as documented (optional dep).
-    from dotenv import load_dotenv
-
-    load_dotenv()
-except ImportError:  # pragma: no cover - dotenv is a listed dependency
-    pass
-
 from inbox_to_action import agent, llm_client, report
 from inbox_to_action.config import load_settings
 from inbox_to_action.mailboxes import build_accounts
 from inbox_to_action.reasoner import get_reasoner
 from inbox_to_action.tools import gmail, notify
+
+
+def _load_env() -> None:
+    """Load a .env from the directory the user runs in.
+
+    Plain `load_dotenv()` searches upward from the *caller's* file — which, for a
+    pip-installed package, is site-packages, not the user's project. `usecwd=True`
+    makes the search start at the current working directory so a `.env` in the
+    folder they run `inbox-to-action` from is picked up. Nothing above reads the
+    environment at import time, so loading here (before any command runs) is fine.
+    """
+    try:
+        from dotenv import find_dotenv, load_dotenv
+    except ImportError:  # pragma: no cover - dotenv is a listed dependency
+        return
+    load_dotenv(find_dotenv(usecwd=True))
+
+
+_load_env()
 
 app = typer.Typer(
     add_completion=False,
