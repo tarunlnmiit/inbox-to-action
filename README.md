@@ -160,18 +160,17 @@ Off by default (opt-in flag). A send failure never breaks the run.
 **Privacy:** this sends email subjects + extracted tasks to Telegram's servers (into
 your own chat). It's notification only — it never sends email.
 
-### Multiple accounts (Gmail, Google Workspace, Outlook)
+### Multiple accounts (Gmail + Google Workspace)
 
 Declare accounts in `config.json` — one merged report, each email tagged with its
 account. Personal Gmail and Workspace both use the Gmail path (Workspace may need
-your admin to allow the OAuth app). Outlook uses Microsoft Graph (read + draft only).
+your admin to allow the OAuth app).
 
 ```json
 {
   "accounts": [
-    { "id": "personal", "kind": "gmail",   "label": "Personal Gmail" },
-    { "id": "work",     "kind": "gmail",   "label": "Workspace" },
-    { "id": "outlook",  "kind": "outlook", "label": "Outlook", "client_id": "AZURE_APP_ID" }
+    { "id": "personal", "kind": "gmail", "label": "Personal Gmail" },
+    { "id": "work",     "kind": "gmail", "label": "Workspace" }
   ]
 }
 ```

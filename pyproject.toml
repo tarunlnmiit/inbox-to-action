@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "inbox-to-action"
-version = "0.3.0"
+version = "0.2.2"
 description = "One-pass agentic inbox triage: classify, summarize, extract tasks, draft replies (never sends), flag calendar."
 readme = "README.md"
 license = { text = "MIT" }
@@ -13,7 +13,7 @@ authors = [{ name = "Tarun Gupta" }]
 keywords = [
     "email", "triage", "ai", "agent", "mcp", "llm",
     "openrouter", "ollama", "nim", "anthropic", "claude-code",
-    "gmail", "outlook", "multi-account", "telegram", "todoist",
+    "gmail", "multi-account", "telegram", "todoist",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -33,8 +33,7 @@ dependencies = [
 [project.optional-dependencies]
 mcp = ["mcp>=1.0"]
 anthropic = ["anthropic>=0.40"]
-outlook = ["msal>=1.24"]
-all = ["mcp>=1.0", "anthropic>=0.40", "msal>=1.24"]
+all = ["mcp>=1.0", "anthropic>=0.40"]
 dev = ["pytest>=8.0", "pytest-cov>=5.0", "pytest-mock>=3.0", "respx>=0.21", "ruff>=0.4", "build>=1.0", "twine>=5.0"]
 
 [project.scripts]

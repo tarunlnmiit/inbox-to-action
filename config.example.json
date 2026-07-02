@@ -7,8 +7,7 @@
     { "field": "any",     "contains": "unsubscribe",    "category": "newsletter" }
   ],
   "accounts": [
-    { "id": "personal", "kind": "gmail",   "label": "Personal Gmail" },
-    { "id": "work",     "kind": "gmail",   "label": "Workspace",   "client_secret": "client_secret.json" },
-    { "id": "outlook",  "kind": "outlook", "label": "Outlook",     "client_id": "YOUR_AZURE_APP_CLIENT_ID", "tenant": "common" }
+    { "id": "personal", "kind": "gmail", "label": "Personal Gmail" },
+    { "id": "work",     "kind": "gmail", "label": "Workspace", "client_secret": "client_secret.json" }
   ]
 }

@@ -164,7 +164,7 @@ def auth(
     ),
     config: str = typer.Option(None, "--config", help="Triage config JSON path."),
 ):
-    """Authorize a mailbox (Gmail read+compose, or Outlook Mail.Read+ReadWrite). Never sends."""
+    """Authorize a Gmail mailbox (read + compose scopes only). Never sends."""
     settings = load_settings(config)
     accounts = build_accounts(settings)
 

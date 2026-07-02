@@ -7,7 +7,7 @@ from typing import Protocol, runtime_checkable
 
 from inbox_to_action.models import Email
 
-_KINDS = ("gmail", "outlook")
+_KINDS = ("gmail",)
 
 
 @dataclass(frozen=True)
@@ -16,8 +16,6 @@ class AccountConfig:
     kind: str  # one of _KINDS
     label: str = ""
     client_secret: str = ""  # gmail: path to OAuth client secrets JSON
-    client_id: str = ""  # outlook: Azure app (client) id
-    tenant: str = "common"  # outlook: authority tenant
 
 
 @runtime_checkable
@@ -59,8 +57,6 @@ def _coerce_accounts(raw) -> tuple[AccountConfig, ...]:
                 kind=kind,
                 label=str(item.get("label", acc_id)),
                 client_secret=str(item.get("client_secret", "")),
-                client_id=str(item.get("client_id", "")),
-                tenant=str(item.get("tenant", "common")) or "common",
             )
         )
     return tuple(out)
@@ -86,19 +82,6 @@ def build_accounts(settings) -> list[MailAccount]:
                     id=cfg.id,
                     label=cfg.label or cfg.id,
                     client_secret=cfg.client_secret or None,
-                )
-            )
-        elif cfg.kind == "outlook":
-            # Outlook provider lands in a later phase; import lazily so its
-            # optional dependency (msal) isn't required for Gmail-only setups.
-            from inbox_to_action.mailboxes.outlook import OutlookAccount
-
-            accounts.append(
-                OutlookAccount(
-                    id=cfg.id,
-                    label=cfg.label or cfg.id,
-                    client_id=cfg.client_id,
-                    tenant=cfg.tenant,
                 )
             )
     return accounts

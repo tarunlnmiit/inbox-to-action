@@ -5,8 +5,8 @@ Thanks for helping improve `inbox-to-action`.
 ## The one hard rule
 
 **The tool must never send email.** It requests only `gmail.readonly` +
-`gmail.compose` (drafts) and, for Outlook, `Mail.Read` + `Mail.ReadWrite`. No PR may
-add a send scope or a send call (`messages().send`, `sendMail`, etc.). This is
+`gmail.compose` (drafts). No PR may add a send scope or a send call
+(`messages().send`, `sendMail`, etc.). This is
 enforced by tests — keep them passing.
 
 ## Dev setup
@@ -34,7 +34,7 @@ pytest --cov=. --cov-report=term-missing   # all tests pass, coverage stays high
 
 ## High-value contributions
 
-- New mailbox providers (finish Outlook / Microsoft Graph — read + draft only).
+- New mailbox providers (read + draft only — never send).
 - New LLM providers in `llm_client.py` (OpenAI-compatible ones are easy).
 - Better classification/extraction prompts.
 - New outbound notifiers (mirror `tools/notify.py`).

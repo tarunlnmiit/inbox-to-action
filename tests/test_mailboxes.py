@@ -83,9 +83,9 @@ def test_gmail_account_save_draft_delegates(monkeypatch):
     assert captured == {"service": "SVC", "mock": True}
 
 
-def test_outlook_account_builds():
-    settings = Settings(accounts=(AccountConfig(id="work", kind="outlook", client_id="x"),))
-    accounts = build_accounts(settings)
-    assert len(accounts) == 1
-    assert accounts[0].kind == "outlook"
-    assert accounts[0].id == "work"
+def test_unknown_kind_is_dropped():
+    # Gmail-only: any non-gmail kind (e.g. a stale "outlook" entry) is dropped.
+    accs = _coerce_accounts(
+        [{"id": "g", "kind": "gmail"}, {"id": "o", "kind": "outlook"}]
+    )
+    assert [a.kind for a in accs] == ["gmail"]

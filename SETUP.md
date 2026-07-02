@@ -116,7 +116,7 @@ Fields: `sender` | `subject` | `body` | `any`. Categories: `action_needed` | `fy
 
 Declare accounts in `config.json` — one merged report, each email tagged by account.
 Personal Gmail and Google Workspace both use the Gmail path (Workspace may need admin
-approval of the OAuth app). Outlook support is planned.
+approval of the OAuth app).
 
 ```json
 {
