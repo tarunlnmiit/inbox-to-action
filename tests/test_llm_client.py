@@ -301,6 +301,51 @@ def test_complete_claude_schema(monkeypatch):
     assert "--append-system-prompt" in cap["cmd"]
 
 
+def _seq_run(calls, stdouts):
+    """Fake subprocess.run returning stdouts[i] on the i-th call; records cmds."""
+    seq = iter(stdouts)
+
+    def run(cmd, *a, **k):
+        calls.append(cmd)
+        return types.SimpleNamespace(stdout=next(seq), stderr="", returncode=0)
+
+    return run
+
+
+def test_complete_claude_schema_empty_result_falls_back(monkeypatch):
+    # CLI version ignores --json-schema → empty result; fallback (no schema flag,
+    # schema embedded in prompt) returns valid JSON.
+    monkeypatch.setenv("PROVIDER", "claude")
+    monkeypatch.setattr(llm_client.shutil, "which", lambda _: "/usr/bin/claude")
+    calls: list = []
+    monkeypatch.setattr(
+        llm_client.subprocess,
+        "run",
+        _seq_run(calls, [_claude_envelope(""), _claude_envelope('{"category":"fyi"}')]),
+    )
+    schema = {"type": "object", "properties": {"category": {"type": "string"}}}
+    out = llm_client.complete(
+        [{"role": "user", "content": "hi"}], json_schema=schema
+    )
+    assert out == {"category": "fyi"}
+    assert "--json-schema" in calls[0]  # first attempt used the flag
+    assert "--json-schema" not in calls[1]  # fallback embeds schema in prompt
+    assert "schema" in calls[1][2].lower()  # -p <prompt> mentions the schema
+
+
+def test_complete_claude_schema_empty_both_raises(monkeypatch):
+    monkeypatch.setenv("PROVIDER", "claude")
+    monkeypatch.setattr(llm_client.shutil, "which", lambda _: "/usr/bin/claude")
+    monkeypatch.setattr(
+        llm_client.subprocess,
+        "run",
+        _seq_run([], [_claude_envelope(""), _claude_envelope("")]),
+    )
+    schema = {"type": "object", "properties": {"category": {"type": "string"}}}
+    with pytest.raises(llm_client.LLMError, match="empty output"):
+        llm_client.complete([{"role": "user", "content": "hi"}], json_schema=schema)
+
+
 def test_complete_claude_nonzero_exit(monkeypatch):
     monkeypatch.setenv("PROVIDER", "claude")
     monkeypatch.setattr(llm_client.shutil, "which", lambda _: "/usr/bin/claude")

@@ -309,6 +309,38 @@ def _complete_claude_cli(
     system = "\n".join(m["content"] for m in messages if m["role"] == "system")
     user = "\n\n".join(m["content"] for m in messages if m["role"] != "system")
 
+    text = _run_claude_cli(user, system, json_schema=json_schema)
+
+    if json_schema is not None:
+        if not text.strip():
+            # Some `claude` CLI versions don't honor `--json-schema` and return
+            # an empty result. Retry once, embedding the schema in the prompt.
+            text = _run_claude_cli(
+                _json_prompt(user, json_schema), system, json_schema=None
+            )
+        if not text.strip():
+            raise LLMError(
+                "claude CLI returned empty output. Check `claude --version` "
+                "(structured output needs a recent Claude Code) and that you're "
+                "logged in — run `claude` once interactively, or set PROVIDER to "
+                "another backend (e.g. ollama / openrouter)."
+            )
+        return _parse_json(text)
+    return text
+
+
+def _json_prompt(user: str, json_schema: dict[str, Any]) -> str:
+    """Embed the schema in the prompt for CLI versions without --json-schema."""
+    return (
+        f"{user}\n\nRespond with ONLY a JSON value matching this schema, no prose, "
+        f"no code fences:\n{json.dumps(json_schema)}"
+    )
+
+
+def _run_claude_cli(
+    user: str, system: str, *, json_schema: Optional[dict[str, Any]]
+) -> str:
+    """Invoke the `claude` CLI once and return its `result` text."""
     cmd = ["claude", "-p", user, "--output-format", "json"]
     if system:
         cmd += ["--append-system-prompt", system]
@@ -328,11 +360,7 @@ def _complete_claude_cli(
         raise LLMError(
             f"claude CLI exited {proc.returncode}: {(proc.stderr or '')[:300]}"
         )
-
-    text = _extract_claude_result(proc.stdout)
-    if json_schema is not None:
-        return _parse_json(text)
-    return text
+    return _extract_claude_result(proc.stdout)
 
 
 def _extract_claude_result(stdout: str) -> str:
