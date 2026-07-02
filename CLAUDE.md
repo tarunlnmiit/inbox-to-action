@@ -15,9 +15,9 @@ ruff check inbox_to_action/
 
 ## Security invariant (do not break)
 
-Gmail scopes = `gmail.readonly` + `gmail.compose` ONLY. Outlook = `Mail.Read` +
-`Mail.ReadWrite` ONLY. No send scope, no send call anywhere. Drafts only. Enforced by
-`tests/test_gmail.py`. `--mock` never writes to real Gmail.
+Gmail scopes = `gmail.readonly` + `gmail.compose` ONLY. No send scope, no send call
+anywhere. Drafts only. Enforced by `tests/test_gmail.py`. `--mock` never writes to real
+Gmail.
 
 ## Package layout
 
@@ -31,7 +31,7 @@ inbox_to_action/
   models.py        Email, Task, TriageResult, CATEGORIES
   report.py        triage-report.md renderer
   mcp_server.py    FastMCP: fetch_emails, save_gmail_draft, append_tasks, write_report
-  mailboxes/       MailAccount protocol; gmail.py + outlook.py (Graph, [outlook] extra)
+  mailboxes/       MailAccount protocol; gmail.py (multi-account Gmail/Workspace)
   tools/           classifier, summarizer, tasks (+ Todoist), gmail (+ is_noreply),
                    calendar_flag, notify (Telegram)
   fixtures/        sample_inbox.json (--mock)
@@ -41,7 +41,7 @@ inbox_to_action/
 
 - `config.json` (gitignored; example: `config.example.json`): `triage_instructions`,
   `rules[]` (field: sender|subject|body|any → category), `accounts[]`
-  (id, kind: gmail|outlook, label, client_secret?, client_id?, tenant?).
+  (id, kind: gmail, label, client_secret?).
 - `.env` (gitignored; example: `.env.example`): `PROVIDER`, `MODEL`, provider keys
   (`OPENROUTER_API_KEY`, `OPENAI_API_KEY`, `NIM_API_KEY`/`NVIDIA_API_KEY`,
   `ANTHROPIC_API_KEY`, `OLLAMA_BASE_URL`), `TRIAGE_INSTRUCTIONS`,
