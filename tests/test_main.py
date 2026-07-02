@@ -5,6 +5,25 @@ from inbox_to_action import main
 runner = CliRunner()
 
 
+def test_load_env_searches_cwd(monkeypatch):
+    # A pip-installed package must find the user's .env by CWD, not by the
+    # site-packages location of main.py. Assert usecwd=True is used.
+    import dotenv
+
+    kw: dict = {}
+    paths: list = []
+
+    def fake_find(**kwargs):
+        kw.update(kwargs)
+        return "/x/.env"
+
+    monkeypatch.setattr(dotenv, "find_dotenv", fake_find)
+    monkeypatch.setattr(dotenv, "load_dotenv", lambda p: paths.append(p))
+    main._load_env()
+    assert kw == {"usecwd": True}
+    assert paths == ["/x/.env"]
+
+
 def test_run_host_provider_errors(monkeypatch):
     monkeypatch.setenv("PROVIDER", "host")
     result = runner.invoke(main.app, ["run", "--mock"])
