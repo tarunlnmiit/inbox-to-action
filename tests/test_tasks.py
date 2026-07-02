@@ -50,6 +50,28 @@ def test_extract_tasks_non_dict(sample_email):
     assert tasks.extract_tasks(sample_email, r) == []
 
 
+def test_extract_tasks_coerces_single_object(sample_email):
+    # Small models sometimes emit `tasks` as one object instead of an array.
+    r = FakeReasoner(lambda m, s: {"tasks": {"text": "Ship it", "deadline": "Mon"}})
+    out = tasks.extract_tasks(sample_email, r)
+    assert len(out) == 1
+    assert out[0].text == "Ship it"
+
+
+def test_extract_tasks_tasks_null_or_string(sample_email):
+    for bad in (None, "no tasks here", 5):
+        r = FakeReasoner(lambda m, s, b=bad: {"tasks": b})
+        assert tasks.extract_tasks(sample_email, r) == []
+
+
+def test_extract_tasks_skips_non_dict_items(sample_email):
+    r = FakeReasoner(
+        lambda m, s: {"tasks": ["just a string", {"text": "Real task"}, None]}
+    )
+    out = tasks.extract_tasks(sample_email, r)
+    assert [t.text for t in out] == ["Real task"]
+
+
 def test_write_tasks_md_creates_and_appends(tmp_path):
     path = tmp_path / "tasks.md"
     tasks.write_tasks_md([Task(text="First", deadline="Mon")], path)

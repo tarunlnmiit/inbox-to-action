@@ -58,3 +58,11 @@ inbox_to_action/
 Every change via the git loop: branch → PR to `main` → squash-merge → delete branch.
 Conventional commits. Small modules, type hints, tests for new behavior (mock the LLM
 with `FakeReasoner`, network with `respx`).
+
+## Structured-output contract (do not break)
+
+`StructuredOutput.tasks` MUST be a JSON array — `[]` when there are no tasks, never
+null/object/string. Schema + prompt live in `inbox_to_action/tools/tasks.py`
+(`_SCHEMA`, `_SYSTEM`); `extract_tasks()` coerces/drops malformed shapes instead of
+crashing. Any new extraction step must follow the same rule: list-typed fields are
+always arrays, empty when nothing was found.

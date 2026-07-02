@@ -33,8 +33,10 @@ _SYSTEM = (
     "For each task: 'text' is one imperative line; 'deadline' is ONLY a short "
     "date or time phrase exactly as stated (e.g. 'Thursday', 'by Friday', "
     "'2026-07-01'), or null when none is given. Never put explanations, names, "
-    "or the word 'null' inside the deadline string. Return an empty list if "
-    "there are no action items."
+    "or the word 'null' inside the deadline string. Respond with a single JSON "
+    'object whose "tasks" field is ALWAYS a JSON array of task objects — '
+    'return {"tasks": []} when there are no action items. "tasks" must never '
+    "be null, a string, or an object."
 )
 
 # Deadline strings longer than this are almost certainly the model leaking
@@ -64,8 +66,16 @@ def extract_tasks(email: Email, reasoner: Reasoner) -> list[Task]:
         max_tokens=512,
     )
     raw = result.get("tasks", []) if isinstance(result, dict) else []
+    # Contract: "tasks" MUST be a JSON array. Small models occasionally emit a
+    # single object, a string, or null; coerce/drop rather than crash.
+    if isinstance(raw, dict):
+        raw = [raw]
+    elif not isinstance(raw, list):
+        raw = []
     tasks: list[Task] = []
     for item in raw:
+        if not isinstance(item, dict):
+            continue
         text = (item.get("text") or "").strip()
         if not text:
             continue
